@@ -486,7 +486,15 @@ part3 = part3.replace(
   "      html += '<button class=\"sug-item\" role=\"option\" data-i=\"' + i + '\"><span class=\"v\">' + esc(e.inf) + '</span><span class=\"t\">' + esc(decEnt(v.ru)) + ' · ' + esc(decEnt(v.tr)) + (e.kind === 'form' ? ' — “' + stripTags(e.form) + '”' : '') + '</span><span class=\"chip\">' + chip + '</span></button>';"
 );
 
-// --- 12) Логотип школы вместо иконки-буквы
+// --- 13) Подвал: юридическая информация вместо рекламы статики
+head = head.replace(
+  '.foot-in b{color:var(--text-2);font-weight:600}',
+  '.foot-in b{color:var(--text-2);font-weight:600}\n\t.foot-legal{max-width:1040px;margin:0 auto;padding:0 20px 24px;font-size:.8rem;color:var(--text-3);line-height:1.6}\n\t.foot-legal a{color:var(--text-2);text-decoration:none}\n\t.foot-legal a:hover{text-decoration:underline}'
+);
+head = head.replace(
+  '  <div class="foot-in">\n    <span><b>Conjugate</b> — English · Français · Español verb tables</span>\n    <span>Static page · Audio uses your browser\'s built-in speech synthesis · No account, no tracking</span>\n  </div>\n</footer>',
+  '  <div class="foot-in">\n    <span><b>Conjugate</b> — English · Français · Español verb tables</span>\n  </div>\n  <div class="foot-legal">\n    © 2019–2026 ИП Громова Анна Александровна, ОГРНИП: 319237500156762, ИНН: 236507001744<br>\n    Лицензия № Л035-01218-23/01091451 · Интерактивная школа «МУДРО» · <a href="https://xn--80aaagnrcpdkofpu2ae0iuf.xn--p1ai">интерактивнаяшкола.рф</a>\n  </div>\n</footer>'
+);
 head = head.replace(
   '.brand-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}',
   '.brand-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}\n\t.brand-logo{height:28px;width:auto;border-radius:6px;display:block;flex-shrink:0}'
