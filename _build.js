@@ -25,10 +25,14 @@ let part1 = C.slice(openIdx, enDataIdx);              // утилиты + дви
 const part2 = C.slice(enDataIdx, searchIdx);          // богатые вызовы ENG/FRG/SPG + ADD
 let part3 = C.slice(searchIdx);                       // поиск + приложение + закрытие
 
-// --- 1) В TENSES.en добавить английский Conditional (есть в данных A)
+// --- 1) В TENSES.en добавить английский Conditional (есть в данных A); в TENSES.es — Imperativo
 const gotoLine = "    { id: 'goto',         name: 'Future (going to)',          ru: 'намеренное будущее',         aux: 'am / is / are going to + base form' }";
 if (!part1.includes('id: \'cond\'') && part1.includes(gotoLine)) {
   part1 = part1.replace(gotoLine, gotoLine + ',\n    { id: \'cond\', name: \'Conditional\', ru: \'условное\', aux: \'would + base form\' }');
+}
+const esSpLine = "'que + haber (subjuntivo) + participle' }";
+if (!part1.includes("id: 'imp', name: 'Imperativo'") && part1.includes(esSpLine)) {
+  part1 = part1.replace(esSpLine, esSpLine + ',\n    { id: \'imp\', name: \'Imperativo\', ru: \'повелительное наклонение\', aux: \'orders & requests — tú, usted, nosotros, vosotros, ustedes\' }');
 }
 
 // --- 2) Hero: упомянуть объём словаря
