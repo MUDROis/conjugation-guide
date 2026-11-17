@@ -32,6 +32,7 @@ input{font:inherit;color:inherit}
 .topbar-in{max-width:1040px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1.06rem;letter-spacing:-.01em;color:var(--text);text-decoration:none;flex-shrink:0}
 .brand-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}
+	.brand-logo{height:28px;width:auto;border-radius:6px;display:block;flex-shrink:0}
 .lang-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:3px;flex:1;min-width:240px;max-width:420px}
 .lang-tab{flex:1;padding:7px 8px;border-radius:8px;font-size:.85rem;font-weight:600;color:var(--text-2);transition:background .15s,color .15s;white-space:nowrap;text-align:center}
 .lang-tab:hover{color:var(--text)}
@@ -177,7 +178,7 @@ footer{border-top:1px solid var(--border);background:var(--surface)}
 <header class="topbar">
   <div class="topbar-in">
     <a class="brand" href="#" id="brandLink" aria-label="Conjugate — home">
-      <span class="brand-mark">C⟫</span>
+      <img class="brand-logo" src="logo.png" alt="Интерактивная школа">
       <span>Conjugate</span>
     </a>
     <nav class="lang-tabs" role="tablist" aria-label="Language">

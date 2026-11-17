@@ -486,7 +486,15 @@ part3 = part3.replace(
   "      html += '<button class=\"sug-item\" role=\"option\" data-i=\"' + i + '\"><span class=\"v\">' + esc(e.inf) + '</span><span class=\"t\">' + esc(decEnt(v.ru)) + ' · ' + esc(decEnt(v.tr)) + (e.kind === 'form' ? ' — “' + stripTags(e.form) + '”' : '') + '</span><span class=\"chip\">' + chip + '</span></button>';"
 );
 
-// --- 11) Гарантия Imperativo у испанских глаголов (если не сгенерирован)
+// --- 12) Логотип школы вместо иконки-буквы
+head = head.replace(
+  '.brand-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}',
+  '.brand-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}\n\t.brand-logo{height:28px;width:auto;border-radius:6px;display:block;flex-shrink:0}'
+);
+head = head.replace(
+  '<span class="brand-mark">C⟫</span>',
+  '<img class="brand-logo" src="logo.png" alt="Интерактивная школа">'
+);
 const ensureImp = `
 /* ================= Ensure Spanish imperative exists ================= */
 (function () {
