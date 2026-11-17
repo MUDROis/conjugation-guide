@@ -3245,9 +3245,12 @@ function showVerb(lang, inf) {
   if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';
   if (v.ru) transP += '<b class="ru">' + esc(decEnt(v.ru)) + '</b>';
   if (lang === 'en' && /irregular/i.test(String(v.type))) {
-    var pastF = v.tenses.past && stripTags(v.tenses.past.rows[0][1]);
-    var ppRaw = v.tenses.presperf && v.tenses.presperf.rows[0][1];
-    var ppF = ppRaw ? stripTags(ppRaw).replace(/^have\s+/i, '') : '';
+    var pastForms = [];
+    if (v.tenses.past) v.tenses.past.rows.forEach(function (r) { var f = stripTags(r[1]); if (f && pastForms.indexOf(f) < 0) pastForms.push(f); });
+    var ppForms = [];
+    if (v.tenses.presperf) v.tenses.presperf.rows.forEach(function (r) { var f = stripTags(r[1]).replace(/^(have|has)\s+/i, ''); if (f && ppForms.indexOf(f) < 0) ppForms.push(f); });
+    var pastF = pastForms.join(' / ');
+    var ppF = ppForms.join(' / ');
     if (pastF && ppF) transP += '<div class="verb-principal">' + esc(v.inf) + ' - ' + esc(pastF) + ' - ' + esc(ppF) + '</div>';
   }
   $('verbTrans').innerHTML = transP;
