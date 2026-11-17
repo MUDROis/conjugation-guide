@@ -113,6 +113,7 @@ table.conj td.pron{color:var(--text-2);font-weight:600;white-space:nowrap;font-s
 table.conj td.form{font-weight:500}
 table.conj td.form b{color:var(--accent);font-weight:700}
 table.conj td.form span.orth{color:var(--text-2)}
+	table.conj td.gloss{color:var(--text-3);font-size:.82rem;font-style:italic;white-space:nowrap;padding-left:6px}
 table.conj td.audio-cell{width:1%;text-align:right;white-space:nowrap;padding-right:20px}
 .spk{width:30px;height:30px;border-radius:8px;display:inline-grid;place-items:center;color:var(--text-3);transition:all .12s;vertical-align:middle}
 .spk:hover{background:var(--accent-soft);color:var(--accent)}
@@ -277,7 +278,15 @@ var VD = {};   // VD[lang][inf] = {inf, ru, tr, type, tags, tenses:{id:{rows,not
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-function allowB(s) { return esc(s).replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>'); }
+function decEnt(s) {
+  return String(s).replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+}
+function allowB(s) {
+  return esc(decEnt(s))
+    .replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>')
+    .replace(/&lt;i&gt;/g, '<i>').replace(/&lt;\/i&gt;/g, '</i>')
+    .replace(/&lt;sup&gt;/g, '<sup>').replace(/&lt;\/sup&gt;/g, '</sup>');
+}
 function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function stripTags(s) { return String(s).replace(/<[^>]+>/g, ''); }
 
@@ -337,7 +346,7 @@ var ELIDE_RE = /^[aàâeéèêëhiîïoôœuùûy]/i;
 
 /* TTS text for a conjugation row: [displayPron, form, ttsPron] */
 function rowTTS(lang, row) {
-  var p = String(row[2]), f = stripTags(row[1]);
+  var p = String(row[2]), f = decEnt(stripTags(row[1]));
   if (lang === 'fr') {
     if (p.slice(-1) === "'") return p + f;                       // j' + avais
     if (/(^|\s)je$/.test(p) && ELIDE_RE.test(f)) return p.replace(/je$/, "j'") + f;
@@ -799,6 +808,107 @@ function raRows(base, o, refl) {
   });
 }
 
+
+/* ================= Russian glosses for conjugated forms ================= */
+var RU_PRON = {
+  en: ['я', 'ты', 'он/она', 'мы', 'вы', 'они'],
+  fr: ['я', 'ты', 'он/она', 'мы', 'вы', 'они'],
+  es: ['я', 'ты', 'он/она', 'мы', 'вы', 'они']
+};
+function ruMode(lang, tid) {
+  var m = {
+    en: { pres:'pres', prescont:'pres', presperf:'pres', presperfcont:'pres', goto:'pres',
+          past:'past', pastcont:'past', pastperf:'past', pastperfcont:'past',
+          fut:'fut', futcont:'fut', futperf:'fut', cond:'cond' },
+    fr: { pres:'pres', impf:'past', pc:'past', pq:'past', fut:'fut', fa:'fut', ps:'past',
+          cond:'cond', cp:'cond', subj:'pres', sp:'past', imp:'imp' },
+    es: { pres:'pres', pc:'past', pret:'past', impf:'past', plus:'past', fut:'fut', fc:'fut',
+          cond:'cond', cc:'cond', subj:'pres', sp:'past', simp:'past', imp:'imp' }
+  };
+  return (m[lang] || {})[tid] || '';
+}
+function ruStem(inf) {
+  var s = String(inf).toLowerCase().trim();
+  if (s.slice(-2) === 'ть') s = s.slice(0, -2);
+  else if (s.slice(-2) === 'ти') s = s.slice(0, -2);
+  else return null;
+  return s;
+}
+var RU_IRR = {
+  быть: ['есть', 'есть', 'есть', 'есть', 'есть', 'есть'],
+  идти: ['иду', 'идёшь', 'идёт', 'идём', 'идёте', 'идут'],
+  есть: ['ем', 'ешь', 'ест', 'едим', 'едите', 'едят'],
+  мочь: ['могу', 'можешь', 'может', 'можем', 'можете', 'могут'],
+  печь: ['пеку', 'печёшь', 'печёт', 'печём', 'печёте', 'пекут'],
+  лечь: ['лягу', 'ляжешь', 'ляжет', 'ляжем', 'ляжете', 'лягут'],
+  течь: ['теку', 'течёшь', 'течёт', 'течём', 'течёте', 'текут'],
+  беречь: ['берегу', 'бережёшь', 'бережёт', 'бережём', 'бережёте', 'берегут'],
+  стричь: ['стригу', 'стрижёшь', 'стрижёт', 'стрижём', 'стрижёте', 'стригут']
+};
+function ruFinite(inf, person) {
+  if (RU_IRR[inf]) return RU_IRR[inf][person];
+  var stem = ruStem(inf); if (!stem) return '';
+  if (person === 0 && stem.slice(-1) === 'и') {
+    var b = stem.slice(0, -1);
+    return b + (/[жшчщгкх]/.test(b.slice(-1)) ? 'у' : 'ю');
+  }
+  var last = stem.slice(-1);
+  var conj2 = last === 'и';
+  var I1 = /[жшчщгкх]/.test(last) ? 'у' : 'ю';
+  var endings1 = [I1, 'ешь', 'ет', 'ем', 'ете', /[жшчщ]/.test(last) ? 'ут' : 'ют'];
+  var II1 = /[жшчщ]/.test(last) ? 'у' : 'ю';
+  var endings2 = [II1, 'ишь', 'ит', 'им', 'ите', 'ят'];
+  return stem + (conj2 ? endings2 : endings1)[person];
+}
+function ruPast(inf, person) {
+  var stem = ruStem(inf); if (!stem) return '';
+  if (person === 2) return stem + 'ла';
+  if (person === 4) return stem + 'ло';
+  return stem + 'л';
+}
+function ruFut(inf, person) {
+  return ['буду', 'будешь', 'будет', 'будем', 'будете', 'будут'][person] + ' ' + inf;
+}
+function ruGloss(lang, tid, person, v) {
+  var mode = ruMode(lang, tid);
+  if (!mode) return '';
+  var ru = v.ru || '';
+  if (lang === 'es' && !ru && v.tr) {
+    // у части испанских глаголов из A перевод на английском — ищем русский через словарь EN
+    if (!window.__ES_RU) {
+      window.__ES_RU = {};
+      Object.keys(VD.en || {}).forEach(function (k) {
+        var e = VD.en[k];
+        if (e.tr && e.ru) window.__ES_RU[String(e.tr).toLowerCase()] = e.ru;
+      });
+    }
+    ru = window.__ES_RU[String(v.tr).toLowerCase()] || '';
+  }
+  if (!ru) return '';
+  var inf = ru.replace(/(.*?)/g, '').split(/[,;·/]/)[0].trim();
+  var P = RU_PRON[lang] || RU_PRON.en;
+  var pron = P[person] || '';
+  if (mode === 'pres') {
+    var f = ruFinite(inf, person);
+    return f ? pron + ' ' + f : '';
+  }
+  if (mode === 'past') {
+    var p = ruPast(inf, person);
+    return p ? pron + ' ' + p : '';
+  }
+  if (mode === 'fut') return pron + ' ' + ruFut(inf, person);
+  if (mode === 'cond') {
+    var c = ruPast(inf, person);
+    return c ? pron + ' бы ' + c : '';
+  }
+  if (mode === 'imp') {
+    if (person !== 0) return '';
+    var stem = ruStem(inf); if (!stem) return '';
+    var f = stem.slice(-1) === 'и' ? stem + 'и' : stem + 'й';
+    return f + '!';
+  }
+  return '';
+}
 
 </script>
 <script src="data/english.js"></script>
@@ -2615,6 +2725,25 @@ SPG('ganar', 'выигрывать; зарабатывать; побеждать
 })();
 
 
+
+/* ================= Ensure Spanish imperative exists ================= */
+(function () {
+  Object.keys(VD.es || {}).forEach(function (inf) {
+    var v = VD.es[inf];
+    if (v.tenses.imp) return;
+    var pr = v.tenses.pres && v.tenses.pres.rows;
+    var sj = v.tenses.subj && v.tenses.subj.rows;
+    if (!pr || !sj) return;
+    var bare = inf.replace(/(se|me|te)$/, '');
+    var stem = bare.slice(0, -2);
+    var suff = /ar$/.test(bare) ? 'ad' : /ir$/.test(bare) ? 'id' : 'ed';
+    var forms = [pr[2][1], sj[2][1], sj[3][1], stem + suff, sj[5][1]]
+      .map(function (f) { return String(f).replace(/<[^>]+>/g, ''); });
+    v.tenses.imp = { rows: ['(tú)', '(usted)', '(nosotros)', '(vosotros)', '(ustedes)']
+      .map(function (p, i) { return [p, forms[i], p]; }) };
+  });
+})();
+
 /* ================= Search index (infinitives + conjugated forms + RU glosses) ================= */
 var INDEX = [];
 (function buildIndex() {
@@ -2719,7 +2848,7 @@ function renderSuggestInto(sugg, list, q) {
       if (e.lang !== lastLang) { html += '<div class="sug-head">' + LANGS[e.lang].name + '</div>'; lastLang = e.lang; }
       var v = VD[e.lang][e.inf];
       var chip = e.kind === 'inf' ? LANGS[e.lang].chip : e.kind === 'ru' ? LANGS[e.lang].chip + ' · RU' : LANGS[e.lang].chip + ' · form';
-      html += '<button class="sug-item" role="option" data-i="' + i + '"><span class="v">' + esc(e.inf) + '</span><span class="t">' + esc(v.ru) + ' · ' + esc(v.tr) + (e.kind === 'form' ? ' — “' + stripTags(e.form) + '”' : '') + '</span><span class="chip">' + chip + '</span></button>';
+      html += '<button class="sug-item" role="option" data-i="' + i + '"><span class="v">' + esc(e.inf) + '</span><span class="t">' + esc(decEnt(v.ru)) + ' · ' + esc(decEnt(v.tr)) + (e.kind === 'form' ? ' — “' + stripTags(e.form) + '”' : '') + '</span><span class="chip">' + chip + '</span></button>';
     });
     sugg.innerHTML = html;
   }
@@ -2819,10 +2948,10 @@ function showLanding() {
   document.title = 'Conjugation — English · Français · Español';
 }
 function exampleHtml(ex, lang) {
-  var tts = stripTags(ex.s);
+  var tts = stripTags(decEnt(ex.s));
   var html = '<div class="example"><button class="spk" data-tts="' + esc(tts) + '" data-lang="' + lang + '" aria-label="Listen to example">' + SPK + '</button><div class="ex-body"><div class="ex-sentence">' + allowB(ex.s) + '</div>';
-  if (ex.t) html += '<div class="ex-trans">' + esc(ex.t) + '</div>';
-  if (ex.ru) html += '<div class="ex-trans ru">' + esc(ex.ru) + '</div>';
+  if (ex.t) html += '<div class="ex-trans">' + esc(decEnt(ex.t)) + '</div>';
+  if (ex.ru) html += '<div class="ex-trans ru">' + esc(decEnt(ex.ru)) + '</div>';
   return html + '</div></div>';
 }
 function showVerb(lang, inf) {
@@ -2846,7 +2975,7 @@ function showVerb(lang, inf) {
   var transP = '';
   if (v.tr) transP = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b>';
   if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';
-  if (v.ru) transP += '<b class="ru">' + esc(v.ru) + '</b>';
+  if (v.ru) transP += '<b class="ru">' + esc(decEnt(v.ru)) + '</b>';
   $('verbTrans').innerHTML = transP;
 
   /* verb-level examples card */
@@ -2861,10 +2990,13 @@ function showVerb(lang, inf) {
     if (!data) return '';
     nav += '<button type="button" class="tense-nav-a" data-i="' + i + '">' + esc(t.name) + '</button>';
     var html = '<section class="tense" id="t' + i + '"><div class="tense-card"><div class="tense-top"><h2>' + esc(t.name) + '</h2><span class="aux">' + esc(t.aux) + '</span></div>';
-    html += '<div class="tbl-wrap"><table class="conj"><thead><tr><th>Pronoun</th><th>Conjugation</th><th style="text-align:right">Audio</th></tr></thead><tbody>';
-    data.rows.forEach(function (row) {
+    html += '<div class="tbl-wrap"><table class="conj"><thead><tr><th>Pronoun</th><th>Conjugation</th><th>Перевод</th><th style="text-align:right">Audio</th></tr></thead><tbody>';
+    data.rows.forEach(function (row, ri) {
       var tts = rowTTS(lang, row);
-      html += '<tr><td class="pron">' + esc(rowDisplayPron(lang, row)) + '</td><td class="form">' + allowB(row[1]) + '</td><td class="audio-cell"><button class="spk" data-tts="' + esc(tts) + '" data-lang="' + lang + '" aria-label="Listen: ' + esc(tts) + '">' + SPK + '</button></td></tr>';
+      var gl = ruGloss(lang, t.id, ri, v);
+      html += '<tr><td class="pron">' + esc(rowDisplayPron(lang, row)) + '</td><td class="form">' + allowB(row[1]) + '</td>' +
+        '<td class="gloss">' + (gl ? esc(gl) : '') + '</td>' +
+        '<td class="audio-cell"><button class="spk" data-tts="' + esc(tts) + '" data-lang="' + lang + '" aria-label="Listen: ' + esc(tts) + '">' + SPK + '</button></td></tr>';
     });
     html += '</tbody></table></div>';
     if (data.note) html += '<div class="irreg-note">' + allowB(data.note) + '</div>';

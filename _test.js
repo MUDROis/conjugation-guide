@@ -105,5 +105,24 @@ for (const L of ['en', 'fr', 'es']) {
 }
 check(emptyEx === 0, 'пустых примеров нет');
 
+// --- 6. Русские глоссы форм
+check(ctx.ruGloss('en', 'pres', 0, VD.en.accept) === 'я принимаю', 'gloss EN accept pres → я принимаю');
+check(ctx.ruGloss('fr', 'pres', 0, VD.fr.parler) === 'я разговариваю', 'gloss FR parler pres → я разговариваю');
+check(ctx.ruGloss('es', 'pres', 0, VD.es.hablar) === 'я говорю', 'gloss ES hablar pres → я говорю');
+check(ctx.ruGloss('es', 'fut', 0, VD.es.hablar) === 'я буду говорить', 'gloss ES hablar fut → я буду говорить');
+check(ctx.ruGloss('en', 'past', 0, VD.en.work) === 'я работал', 'gloss EN work past → я работал');
+check(ctx.ruGloss('en', 'cond', 0, VD.en.work) === 'я бы работал', 'gloss EN work cond → я бы работал');
+check(ctx.ruGloss('es', 'pres', 2, VD.es.abrir) === 'он/она открывает', 'gloss ES abrir (ru из EN) pres → открывает');
+
+// --- 7. Декодирование сущностей и <i> в заметках
+check(ctx.decEnt("I don&#39;t go &nbsp; there") === "I don't go   there", 'decEnt: &#39; и &nbsp;');
+check(ctx.allowB('<i>decir → dijo</i> <b>dijo</b>') === '<i>decir → dijo</i> <b>dijo</b>', 'allowB сохраняет <i> и <b>');
+
+// --- 8. Imperativo есть у каждого испанского глагола
+let noImp = 0;
+for (const inf of Object.keys(VD.es)) if (!VD.es[inf].tenses.imp) noImp++;
+check(noImp === 0, 'es: Imperativo у всех ' + Object.keys(VD.es).length + ' глаголов');
+check(VD.es['poder'] && !!VD.es['poder'].tenses.imp, 'es poder тоже имеет Imperativo (был noImp)');
+
 console.log('\nИТОГ: ' + (errors === 0 ? 'ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ ✓' : 'ОШИБОК: ' + errors));
 process.exit(errors === 0 ? 0 : 1);
