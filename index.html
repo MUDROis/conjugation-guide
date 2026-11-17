@@ -88,6 +88,7 @@ main{max-width:1040px;margin:0 auto;padding:8px 20px 64px;min-height:55vh}
 .listen-big:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.06)}
 .listen-big.playing{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .verb-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+	.verb-principal{margin-top:8px;font-size:.9rem;font-weight:600;color:var(--text);letter-spacing:.01em}
 .pill{font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:99px;background:var(--tag);color:var(--tag-text);border:1px solid var(--border)}
 .pill.accent{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-border)}
 .pill.link{cursor:pointer;transition:all .15s}
@@ -3243,6 +3244,12 @@ function showVerb(lang, inf) {
   if (v.tr) transP = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b>';
   if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';
   if (v.ru) transP += '<b class="ru">' + esc(decEnt(v.ru)) + '</b>';
+  if (lang === 'en' && /irregular/i.test(String(v.type))) {
+    var pastF = v.tenses.past && stripTags(v.tenses.past.rows[0][1]);
+    var ppRaw = v.tenses.presperf && v.tenses.presperf.rows[0][1];
+    var ppF = ppRaw ? stripTags(ppRaw).replace(/^have\s+/i, '') : '';
+    if (pastF && ppF) transP += '<div class="verb-principal">' + esc(v.inf) + ' - ' + esc(pastF) + ' - ' + esc(ppF) + '</div>';
+  }
   $('verbTrans').innerHTML = transP;
 
   /* verb-level examples card */

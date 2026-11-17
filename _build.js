@@ -409,10 +409,10 @@ function ruGloss(lang, tid, person, v) {
 }
 `;
 
-// --- 6) verbTrans рендерится без пустых секций + декодирование
+// --- 6) verbTrans рендерится без пустых секций + декодирование + 3 формы английских неправильных
 part3 = part3.replace(
   "  $('verbTrans').innerHTML = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b> &nbsp;·&nbsp; <b class=\"ru\">' + esc(v.ru) + '</b>';",
-  "  var transP = '';\n  if (v.tr) transP = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b>';\n  if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';\n  if (v.ru) transP += '<b class=\"ru\">' + esc(decEnt(v.ru)) + '</b>';\n  $('verbTrans').innerHTML = transP;"
+  "  var transP = '';\n  if (v.tr) transP = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b>';\n  if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';\n  if (v.ru) transP += '<b class=\"ru\">' + esc(decEnt(v.ru)) + '</b>';\n  if (lang === 'en' && /irregular/i.test(String(v.type))) {\n    var pastF = v.tenses.past && stripTags(v.tenses.past.rows[0][1]);\n    var ppRaw = v.tenses.presperf && v.tenses.presperf.rows[0][1];\n    var ppF = ppRaw ? stripTags(ppRaw).replace(/^have\\s+/i, '') : '';\n    if (pastF && ppF) transP += '<div class=\"verb-principal\">' + esc(v.inf) + ' - ' + esc(pastF) + ' - ' + esc(ppF) + '</div>';\n  }\n  $('verbTrans').innerHTML = transP;"
 );
 
 // --- 7) Клик по времени не должен сбрасывать глагол: hash-якоря -> кнопки со скроллом
@@ -487,6 +487,10 @@ part3 = part3.replace(
 );
 
 // --- 13) Подвал: юридическая информация вместо рекламы статики
+head = head.replace(
+  '.verb-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}',
+  '.verb-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}\n\t.verb-principal{margin-top:8px;font-size:.9rem;font-weight:600;color:var(--text);letter-spacing:.01em}'
+);
 head = head.replace(
   '.foot-in b{color:var(--text-2);font-weight:600}',
   '.foot-in b{color:var(--text-2);font-weight:600}\n\t.foot-legal{max-width:1040px;margin:0 auto;padding:0 20px 24px;font-size:.8rem;color:var(--text-3);line-height:1.6;text-align:center}\n\t.foot-legal a{color:var(--text-2);text-decoration:none}\n\t.foot-legal a:hover{text-decoration:underline}'
