@@ -442,11 +442,38 @@ part3 = part3.replace(
   "    data.rows.forEach(function (row, ri) {\n      var tts = rowTTS(lang, row);\n      var gl = ruGloss(lang, t.id, ri, v);\n      html += '<tr><td class=\"pron\">' + esc(rowDisplayPron(lang, row)) + '</td><td class=\"form\">' + allowB(row[1]) + '</td>' +\n        '<td class=\"gloss\">' + (gl ? esc(gl) : '') + '</td>' +\n        '<td class=\"audio-cell\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen: ' + esc(tts) + '\">' + SPK + '</button></td></tr>';\n    });"
 );
 
-// --- 9) Примеры: декодирование сущностей
+// --- 9) Примеры: декодирование сущностей + автогенерация примера под каждым временем
 part3 = part3.replace(
-  "function exampleHtml(ex, lang) {\n  var tts = stripTags(ex.s);\n  var html = '<div class=\"example\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen to example\">' + SPK + '</button><div class=\"ex-body\"><div class=\"ex-sentence\">' + allowB(ex.s) + '</div>';\n  if (ex.t) html += '<div class=\"ex-trans\">' + esc(ex.t) + '</div>';\n  if (ex.ru) html += '<div class=\"ex-trans ru\">' + esc(ex.ru) + '</div>';\n  return html + '</div></div>';\n}",
-  "function exampleHtml(ex, lang) {\n  var tts = stripTags(decEnt(ex.s));\n  var html = '<div class=\"example\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen to example\">' + SPK + '</button><div class=\"ex-body\"><div class=\"ex-sentence\">' + allowB(ex.s) + '</div>';\n  if (ex.t) html += '<div class=\"ex-trans\">' + esc(decEnt(ex.t)) + '</div>';\n  if (ex.ru) html += '<div class=\"ex-trans ru\">' + esc(decEnt(ex.ru)) + '</div>';\n  return html + '</div></div>';\n}"
+  "function exampleHtml(ex, lang) {",
+  `var EX_PATTERN = {
+  en: { pres: 'I {f} every day.', prescont: 'I am {f} right now.', presperf: 'I have {f} already.',
+         presperfcont: 'I have been {f} lately.', past: 'I {f} yesterday.', pastcont: 'I was {f} then.',
+         pastperf: 'I had {f} before.', pastperfcont: 'I had been {f}.', fut: 'I will {f} tomorrow.',
+         futcont: 'I will be {f}.', futperf: 'I will have {f}.', goto: 'I am going to {f}.', cond: 'I would {f}.' },
+  fr: { pres: 'Je {f}.', impf: 'Autrefois, je {f}.', pc: 'J\\'{f}.', pq: 'J\\'{f}.',
+         fut: 'Je {f} demain.', fa: 'J\\'{f}.', ps: 'Je {f} tout à coup.',
+         cond: 'Je {f} volontiers.', cp: 'J\\'{f}.', subj: 'Il faut que je {f}.',
+         sp: 'Je doute que j\\'{f}.', imp: '{f}!' },
+  es: { pres: 'Yo {f}.', pc: 'Yo {f}.', pret: 'Ayer yo {f}.', impf: 'Antes yo {f}.',
+         plus: 'Yo {f}.', fut: 'Mañana yo {f}.', fc: 'Yo {f}.',
+         cond: 'Yo {f} si pudiera.', cc: 'Yo {f}.', subj: 'Espero que yo {f}.',
+         simp: 'Si yo {f}, sería mejor.', sp: 'No creo que yo {f}.', imp: '{f}!' }
+};
+function exampleHtml(ex, lang) {
+  var tts = stripTags(decEnt(ex.s));
+  var html = '<div class="example"><button class="spk" data-tts="' + esc(tts) + '" data-lang="' + lang + '" aria-label="Listen to example">' + SPK + '</button><div class="ex-body"><div class="ex-sentence">' + allowB(ex.s) + '</div>';
+  if (ex.t) html += '<div class="ex-trans">' + esc(decEnt(ex.t)) + '</div>';
+  if (ex.ru) html += '<div class="ex-trans ru">' + esc(decEnt(ex.ru)) + '</div>';
+  return html + '</div></div>';
+}`
 );
+part3 = part3.replace(
+  "    html += '</div>';\n    if (data.ex && data.ex.length) html += '<div class=\"examples\">' + data.ex.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';",
+  "    html += '</div>';\n    var exList = data.ex || [];\n    if (!exList.length) {\n      var r0 = data.rows[0] || [];\n      var f0 = stripTags(r0[1] || '');\n      if (f0) {\n        var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';\n        var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');\n        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: null }];\n      }\n    }\n    if (exList.length) html += '<div class=\"examples\">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';"
+);
+/* Удалить осиротевший дубль тела exampleHtml (если остался от старых правок) */
+const STRAY_EXAMPLE = "\n  var tts = stripTags(ex.s);\n  var html = '<div class=\"example\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen to example\">' + SPK + '</button><div class=\"ex-body\"><div class=\"ex-sentence\">' + allowB(ex.s) + '</div>';\n  if (ex.t) html += '<div class=\"ex-trans\">' + esc(ex.t) + '</div>';\n  if (ex.ru) html += '<div class=\"ex-trans ru\">' + esc(ex.ru) + '</div>';\n  return html + '</div></div>';\n}";
+part3 = part3.replace(STRAY_EXAMPLE, '');
 
 // --- 10) Подсказки поиска: декодирование переводов
 part3 = part3.replace(
