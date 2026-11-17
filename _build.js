@@ -17,7 +17,7 @@ const enDataIdx = C.indexOf(EN_DATA_COMMENT, openIdx);
 const searchIdx = C.indexOf(SEARCH_INDEX, enDataIdx);
 if (openIdx < 0 || enDataIdx < 0 || searchIdx < 0) throw new Error('markers not found');
 
-const head = C.slice(0, openIdx);                       // HTML до <script>
+let head = C.slice(0, openIdx);                       // HTML до <script>
 let part1 = C.slice(openIdx, enDataIdx);                // утилиты + движки
 const part2 = C.slice(enDataIdx, searchIdx);            // богатые вызовы ENG/FRG/SPG + ADD
 let part3 = C.slice(searchIdx);                         // поиск + приложение + закрытие
@@ -38,6 +38,19 @@ part3 = part3.replace(
 part3 = part3.replace(
   "  $('verbTrans').innerHTML = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b> &nbsp;·&nbsp; <b class=\"ru\">' + esc(v.ru) + '</b>';",
   "  var transP = '';\n  if (v.tr) transP = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b>';\n  if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';\n  if (v.ru) transP += '<b class=\"ru\">' + esc(v.ru) + '</b>';\n  $('verbTrans').innerHTML = transP;"
+);
+
+// --- 4) Клик по времени не должен сбрасывать глагол: hash-якоря -> кнопки со скроллом
+head = head.replace('.tense-nav a{', '.tense-nav a,.tense-nav button{')
+           .replace('.tense-nav a:hover{', '.tense-nav a:hover,.tense-nav button:hover{')
+           .replace('.tense-nav a.current{', '.tense-nav a.current,.tense-nav button.current{');
+part3 = part3.replace(
+  "    nav += '<a href=\"#t' + i + '\" data-i=\"' + i + '\">' + esc(t.name) + '</a>';",
+  "    nav += '<button type=\"button\" class=\"tense-nav-a\" data-i=\"' + i + '\">' + esc(t.name) + '</button>';"
+);
+part3 = part3.replace(
+  "$('tenseNav').innerHTML = nav;\n  navLinks = Array.prototype.slice.call($('tenseNav').querySelectorAll('a'));",
+  "$('tenseNav').innerHTML = nav;\n  navLinks = Array.prototype.slice.call($('tenseNav').querySelectorAll('.tense-nav-a'));\n  $('tenseNav').querySelectorAll('.tense-nav-a').forEach(function (b) {\n    b.addEventListener('click', function () {\n      var el = document.getElementById('t' + b.dataset.i);\n      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });\n    });\n  });"
 );
 
 // --- 4) Мост: большой словарь A -> формат VD (запускается ДО вызовов C)

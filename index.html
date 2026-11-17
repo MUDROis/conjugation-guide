@@ -95,9 +95,9 @@ main{max-width:1040px;margin:0 auto;padding:8px 20px 64px;min-height:55vh}
 .translation-line b{color:var(--text);font-weight:600}
 .tense-nav{position:sticky;top:59px;z-index:40;background:rgba(250,250,249,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:1040px;margin:22px auto 0;padding:10px 20px;border-bottom:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .tense-nav::-webkit-scrollbar{display:none}
-.tense-nav a{font-size:.82rem;font-weight:600;color:var(--text-2);padding:6px 12px;border-radius:8px;white-space:nowrap;transition:all .15s;text-decoration:none}
-.tense-nav a:hover{background:var(--accent-soft);color:var(--accent)}
-.tense-nav a.current{background:var(--accent);color:#fff}
+.tense-nav a,.tense-nav button{font-size:.82rem;font-weight:600;color:var(--text-2);padding:6px 12px;border-radius:8px;white-space:nowrap;transition:all .15s;text-decoration:none}
+.tense-nav a:hover,.tense-nav button:hover{background:var(--accent-soft);color:var(--accent)}
+.tense-nav a.current,.tense-nav button.current{background:var(--accent);color:#fff}
 /* ---------- Tense cards & tables ---------- */
 .tense{padding-top:26px;margin-top:6px;scroll-margin-top:118px}
 .tense-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -2859,7 +2859,7 @@ function showVerb(lang, inf) {
   var nav = '', body = TENSES[lang].map(function (t, i) {
     var data = v.tenses[t.id];
     if (!data) return '';
-    nav += '<a href="#t' + i + '" data-i="' + i + '">' + esc(t.name) + '</a>';
+    nav += '<button type="button" class="tense-nav-a" data-i="' + i + '">' + esc(t.name) + '</button>';
     var html = '<section class="tense" id="t' + i + '"><div class="tense-card"><div class="tense-top"><h2>' + esc(t.name) + '</h2><span class="aux">' + esc(t.aux) + '</span></div>';
     html += '<div class="tbl-wrap"><table class="conj"><thead><tr><th>Pronoun</th><th>Conjugation</th><th style="text-align:right">Audio</th></tr></thead><tbody>';
     data.rows.forEach(function (row) {
@@ -2877,7 +2877,13 @@ function showVerb(lang, inf) {
     p.addEventListener('click', function () { chooseEntry({ lang: p.dataset.lang, inf: inf, form: inf, kind: 'inf' }); });
   });
   $('tenseNav').innerHTML = nav;
-  navLinks = Array.prototype.slice.call($('tenseNav').querySelectorAll('a'));
+  navLinks = Array.prototype.slice.call($('tenseNav').querySelectorAll('.tense-nav-a'));
+  $('tenseNav').querySelectorAll('.tense-nav-a').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var el = document.getElementById('t' + b.dataset.i);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
   $('tenseArea').innerHTML = vexHtml + body;
   verbPageEl.querySelectorAll('.spk[data-tts]').forEach(function (b) {
     b.addEventListener('click', function () { speak(this.dataset.tts, this.dataset.lang, this); });
