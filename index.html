@@ -1199,7 +1199,7 @@ function ruGloss(lang, tid, person, v) {
         for (var i = 0; i < forms.length; i++) rows.push([PR[i] || '', forms[i], PR[i] || '']);
         v.tenses[tid] = { rows: rows };
         if (td.example && String(td.example).trim() && String(td.example).indexOf('—') === -1) {
-          v.tenses[tid].ex = [{ s: td.example, t: null, ru: null }];
+          v.tenses[tid].ex = [{ s: td.example, t: null, ru: ruGloss(lang, tid, 0, v) || null }];
         }
       });
       VD[lang][inf] = v;
@@ -3267,7 +3267,7 @@ function showVerb(lang, inf) {
       if (f0) {
         var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';
         var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');
-        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: null }];
+        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: ruGloss(lang, t.id, 0, v) || null }];
       }
     }
     if (exList.length) html += '<div class="examples">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';
@@ -3285,7 +3285,7 @@ function showVerb(lang, inf) {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
-  $('tenseArea').innerHTML = vexHtml + body;
+  $('tenseArea').innerHTML = body + vexHtml;
   verbPageEl.querySelectorAll('.spk[data-tts]').forEach(function (b) {
     b.addEventListener('click', function () { speak(this.dataset.tts, this.dataset.lang, this); });
   });

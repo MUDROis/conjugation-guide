@@ -469,11 +469,16 @@ function exampleHtml(ex, lang) {
 );
 part3 = part3.replace(
   "    html += '</div>';\n    if (data.ex && data.ex.length) html += '<div class=\"examples\">' + data.ex.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';",
-  "    html += '</div>';\n    var exList = data.ex || [];\n    if (!exList.length) {\n      var r0 = data.rows[0] || [];\n      var f0 = stripTags(r0[1] || '');\n      if (f0) {\n        var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';\n        var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');\n        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: null }];\n      }\n    }\n    if (exList.length) html += '<div class=\"examples\">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';"
+  "    html += '</div>';\n    var exList = data.ex || [];\n    if (!exList.length) {\n      var r0 = data.rows[0] || [];\n      var f0 = stripTags(r0[1] || '');\n      if (f0) {\n        var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';\n        var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');\n        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: ruGloss(lang, t.id, 0, v) || null }];\n      }\n    }\n    if (exList.length) html += '<div class=\"examples\">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';"
 );
 /* Удалить осиротевший дубль тела exampleHtml (если остался от старых правок) */
 const STRAY_EXAMPLE = "\n  var tts = stripTags(ex.s);\n  var html = '<div class=\"example\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen to example\">' + SPK + '</button><div class=\"ex-body\"><div class=\"ex-sentence\">' + allowB(ex.s) + '</div>';\n  if (ex.t) html += '<div class=\"ex-trans\">' + esc(ex.t) + '</div>';\n  if (ex.ru) html += '<div class=\"ex-trans ru\">' + esc(ex.ru) + '</div>';\n  return html + '</div></div>';\n}";
 part3 = part3.replace(STRAY_EXAMPLE, '');
+/* Примеры глагола (vex) — под таблицами времён, а не над ними */
+part3 = part3.replace(
+  "$('tenseArea').innerHTML = vexHtml + body;",
+  "$('tenseArea').innerHTML = body + vexHtml;"
+);
 
 // --- 10) Подсказки поиска: декодирование переводов
 part3 = part3.replace(
@@ -541,7 +546,7 @@ const bridge = `
         for (var i = 0; i < forms.length; i++) rows.push([PR[i] || '', forms[i], PR[i] || '']);
         v.tenses[tid] = { rows: rows };
         if (td.example && String(td.example).trim() && String(td.example).indexOf('—') === -1) {
-          v.tenses[tid].ex = [{ s: td.example, t: null, ru: null }];
+          v.tenses[tid].ex = [{ s: td.example, t: null, ru: ruGloss(lang, tid, 0, v) || null }];
         }
       });
       VD[lang][inf] = v;
