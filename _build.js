@@ -38,7 +38,7 @@ if (!part1.includes("id: 'imp', name: 'Imperativo'") && part1.includes(esSpLine)
 // --- 2) Hero: упомянуть объём словаря
 part3 = part3.replace(
   'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — with example sentences and audio for every form.',
-  'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — 185 + 178 + 198 verbs, with example sentences, translations and audio for every form.'
+  'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — hundreds of B2 verbs, with example sentences, translations and audio for every form.'
 );
 
 // --- 3) Декодер сущностей + allowB восстанавливает <i>/<sup> (не только <b>)
@@ -535,6 +535,7 @@ const bridge = `
     VD[lang] = VD[lang] || {};
     var PR = AI_PRON[lang], map = AI_MAP[lang] || {};
     Object.keys(d.verbs).forEach(function (inf) {
+      if (VD[lang][inf] && Object.keys(VD[lang][inf].tenses).length) return; // уже есть из движков
       var src = d.verbs[inf];
       var v = { inf: inf, ru: '', tr: '', type: src.type || '', tags: [], tenses: {}, vex: [] };
       if (lang === 'es') v.tr = src.translation || '';
@@ -558,6 +559,9 @@ const bridge = `
 const out =
   head +
   part1 + '\n</script>\n' +
+  '<script src="data/extra_en.js"></script>\n' +
+  '<script src="data/extra_fr.js"></script>\n' +
+  '<script src="data/extra_es.js"></script>\n' +
   '<script src="data/english.js"></script>\n' +
   '<script src="data/french.js"></script>\n' +
   '<script src="data/spanish.js"></script>\n' +

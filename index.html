@@ -1156,6 +1156,9 @@ function ruGloss(lang, tid, person, v) {
 }
 
 </script>
+<script src="data/extra_en.js"></script>
+<script src="data/extra_fr.js"></script>
+<script src="data/extra_es.js"></script>
 <script src="data/english.js"></script>
 <script src="data/french.js"></script>
 <script src="data/spanish.js"></script>
@@ -1188,6 +1191,7 @@ function ruGloss(lang, tid, person, v) {
     VD[lang] = VD[lang] || {};
     var PR = AI_PRON[lang], map = AI_MAP[lang] || {};
     Object.keys(d.verbs).forEach(function (inf) {
+      if (VD[lang][inf] && Object.keys(VD[lang][inf].tenses).length) return; // уже есть из движков
       var src = d.verbs[inf];
       var v = { inf: inf, ru: '', tr: '', type: src.type || '', tags: [], tenses: {}, vex: [] };
       if (lang === 'es') v.tr = src.translation || '';

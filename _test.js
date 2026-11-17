@@ -22,10 +22,10 @@ const indexBuild = part3.slice(0, indexEnd);     // только сборка IN
 const ctx = { window: {} };
 vm.createContext(ctx);
 
-for (const f of ['english.js', 'french.js', 'spanish.js']) {
+vm.runInContext(part1, ctx);
+for (const f of ['extra_en.js', 'extra_fr.js', 'extra_es.js', 'english.js', 'french.js', 'spanish.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, 'data', f), 'utf8'), ctx);
 }
-vm.runInContext(part1, ctx);
 vm.runInContext(part2, ctx);
 vm.runInContext(indexBuild, ctx);
 
@@ -149,6 +149,20 @@ check(ctx.ruNormInf('быть (о сущности, признаке)') === 'б�
 check(ctx.ruNormInf('вести себя') === '', 'normInf: вести себя → пусто');
 check(ctx.ruNormInf('говорить, разговаривать') === 'говорить', 'normInf: говориорить, разговаривать → говориорить');
 check(ctx.ruNormInf('делать/сделать') === 'делать', 'normInf: делать/сделать → делать');
+
+// --- 10. Расширенная база B2
+check(Object.keys(VD.en).length >= 400, 'EN: база расширена (' + Object.keys(VD.en).length + ')');
+check(Object.keys(VD.fr).length >= 300, 'FR: база расширена (' + Object.keys(VD.fr).length + ')');
+check(Object.keys(VD.es).length >= 300, 'ES: база расширена (' + Object.keys(VD.es).length + ')');
+check(VD.en.achieve && tagless(VD.en.achieve.tenses.past.rows[0][1]) === 'achieved', 'EN achieve past = achieved');
+check(VD.en.choose && tagless(VD.en.choose.tenses.past.rows[0][1]) === 'chose', 'EN choose past = chose');
+check(VD.en.wake && tagless(VD.en.wake.tenses.presperf.rows[0][1]) === 'have woken', 'EN wake pp = woken');
+check(VD.fr['réussir'] && tagless(VD.fr['réussir'].tenses.pres.rows[0][1]) === 'réussis', 'FR réussir présent = réussis');
+check(VD.fr.apparaître && tagless(VD.fr.apparaître.tenses.pc.rows[0][1]).includes('apparu'), 'FR apparaître pp = apparu');
+check(VD.es.alcanzar && tagless(VD.es.alcanzar.tenses.pres.rows[0][1]) === 'alcanzo', 'ES alcanzar presente = alcanzo');
+check(VD.es.volver && tagless(VD.es.volver.tenses.pc.rows[0][1]) === 'he vuelto', 'ES volver pp = vuelto');
+check(VD.es.reír && tagless(VD.es.reír.tenses.pret.rows[2][1]) === 'rió', 'ES reír pret 3sg = rió');
+check(VD.es.seguir && tagless(VD.es.seguir.tenses.subj.rows[0][1]) === 'siga', 'ES seguir subj = siga');
 
 console.log('\nИТОГ: ' + (errors === 0 ? 'ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ ✓' : 'ОШИБОК: ' + errors));
 process.exit(errors === 0 ? 0 : 1);
