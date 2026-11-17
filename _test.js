@@ -23,7 +23,7 @@ const ctx = { window: {} };
 vm.createContext(ctx);
 
 vm.runInContext(part1, ctx);
-for (const f of ['extra_en.js', 'extra_fr.js', 'extra_es.js', 'english.js', 'french.js', 'spanish.js']) {
+for (const f of ['extra_en.js', 'extra_fr.js', 'extra_es.js', 'extra_de.js', 'english.js', 'french.js', 'spanish.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, 'data', f), 'utf8'), ctx);
 }
 vm.runInContext(part2, ctx);
@@ -163,6 +163,19 @@ check(VD.es.alcanzar && tagless(VD.es.alcanzar.tenses.pres.rows[0][1]) === 'alca
 check(VD.es.volver && tagless(VD.es.volver.tenses.pc.rows[0][1]) === 'he vuelto', 'ES volver pp = vuelto');
 check(VD.es.reír && tagless(VD.es.reír.tenses.pret.rows[2][1]) === 'rió', 'ES reír pret 3sg = rió');
 check(VD.es.seguir && tagless(VD.es.seguir.tenses.subj.rows[0][1]) === 'siga', 'ES seguir subj = siga');
+
+// --- 11. Немецкий язык
+check(Object.keys(VD.de).length >= 200, 'DE: база (' + Object.keys(VD.de).length + ')');
+check(ctx.TENSES.de && ctx.TENSES.de.length === 8, 'DE: 8 времён');
+check(ctx.LANGS.de && ctx.LANGS.de.chip === 'DE', 'DE: язык в LANGS');
+const deSein = VD.de.sein;
+check(tagless(deSein.tenses.pres.rows[0][1]) === 'bin' && tagless(deSein.tenses.pr.rows[0][1]) === 'war' && tagless(deSein.tenses.perf.rows[0][1]) === 'bin gewesen', 'DE sein: bin / war / bin gewesen');
+const deMachen = VD.de.machen;
+check(tagless(deMachen.tenses.pres.rows[1][1]) === 'machst' && tagless(deMachen.tenses.pr.rows[0][1]) === 'machte' && tagless(deMachen.tenses.perf.rows[0][1]) === 'habe gemacht', 'DE machen: machst / machte / habe gemacht');
+check(tagless(VD.de.anziehen.tenses.perf.rows[0][1]) === 'habe angezogen', 'DE anziehen perf = habe angezogen');
+check(ctx.ruGloss('de', 'pres', 0, deSein) === 'я есть', 'DE gloss sein pres = я есть');
+check(ctx.ruGloss('de', 'fut', 0, deSein) === 'я буду', 'DE gloss sein fut = я буду');
+check(ctx.ruGloss('de', 'perf', 0, deSein) === 'я был', 'DE gloss sein perf = я был');
 
 console.log('\nИТОГ: ' + (errors === 0 ? 'ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ ✓' : 'ОШИБОК: ' + errors));
 process.exit(errors === 0 ? 0 : 1);

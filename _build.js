@@ -393,7 +393,10 @@ function ruGloss(lang, tid, person, v) {
     var p = ruPast(inf, person);
     return p ? pron + ' ' + p : '';
   }
-  if (mode === 'fut') return pron + ' ' + ruFut(inf, person);
+  if (mode === 'fut') {
+    if (inf === 'быть') return pron + ' ' + ['буду', 'будешь', 'будет', 'будем', 'будете', 'будут'][person];
+    return pron + ' ' + ruFut(inf, person);
+  }
   if (mode === 'cond') {
     var c = ruPast(inf, person);
     return c ? pron + ' бы ' + c : '';
@@ -415,7 +418,89 @@ part3 = part3.replace(
   "  var transP = '';\n  if (v.tr) transP = 'meaning&nbsp;· <b>' + allowB(v.tr) + '</b>';\n  if (v.ru && transP) transP += ' &nbsp;·&nbsp; ';\n  if (v.ru) transP += '<b class=\"ru\">' + esc(decEnt(v.ru)) + '</b>';\n  if (lang === 'en' && /irregular/i.test(String(v.type))) {\n    var pastForms = [];\n    if (v.tenses.past) v.tenses.past.rows.forEach(function (r) { var f = stripTags(r[1]); if (f && pastForms.indexOf(f) < 0) pastForms.push(f); });\n    var ppForms = [];\n    if (v.tenses.presperf) v.tenses.presperf.rows.forEach(function (r) { var f = stripTags(r[1]).replace(/^(have|has)\\s+/i, ''); if (f && ppForms.indexOf(f) < 0) ppForms.push(f); });\n    var pastF = pastForms.join(' / ');\n    var ppF = ppForms.join(' / ');\n    if (pastF && ppF) transP += '<div class=\"verb-principal\">' + esc(v.inf) + ' - ' + esc(pastF) + ' - ' + esc(ppF) + '</div>';\n  }\n  $('verbTrans').innerHTML = transP;"
 );
 
-// --- 7) Клик по времени не должен сбрасывать глагол: hash-якоря -> кнопки со скроллом
+// --- 14) Немецкий язык: движок, времён, язык, глоссы
+part1 += `
+/* ============ German conjugation engine ============ */
+var DE_P = ['ich', 'du', 'er / sie / es', 'wir', 'ihr', 'sie / Sie'];
+var DE_T = ['ich', 'du', 'er', 'wir', 'ihr', 'sie'];
+var DE_AUX_H = ['habe', 'hast', 'hat', 'haben', 'habt', 'haben'];
+var DE_AUX_S = ['bin', 'bist', 'ist', 'sind', 'seid', 'sind'];
+var DE_AUX_HABEN = ['hatte', 'hattest', 'hatte', 'hatten', 'hattet', 'hatten'];
+var DE_AUX_SEIN = ['war', 'warst', 'war', 'waren', 'wart', 'waren'];
+var DE_WERDEN = ['werde', 'wirst', 'wird', 'werden', 'werdet', 'werden'];
+var DE_WUERDE = ['würde', 'würdest', 'würde', 'würden', 'würdet', 'würden'];
+function deSep(inf) {
+  var i = inf.indexOf(' ');
+  return i > 0 ? [inf.slice(0, i), inf.slice(i + 1)] : [inf, ''];
+}
+function deConn(stem) { return /[td]$/.test(stem) ? 'e' : ''; }
+function deStem(bare) {
+  if (/en$/.test(bare)) return bare.slice(0, -2);
+  return bare.slice(0, -1); // -eln/-ern: lächeln → lächel, wandern → wander
+}
+function deWeakPresent(stem) {
+  var conn = deConn(stem);
+  var du = /[sßzx]$/.test(stem) ? stem + 't' : stem + conn + 'st';
+  return [stem + 'e', du, stem + conn + 't', stem + 'en', stem + conn + 't', stem + 'en'];
+}
+function deWeakPast(stem) {
+  var conn = deConn(stem);
+  return [stem + conn + 'te', stem + conn + 'test', stem + conn + 'te', stem + conn + 'ten', stem + conn + 'tet', stem + conn + 'ten'];
+}
+function deWeakPP(stem) {
+  return 'ge' + stem + (deConn(stem) ? 'et' : 't');
+}
+function DE(inf, ru, tr, o) {
+  o = o || {};
+  VD.de = VD.de || {};
+  var v = { inf: inf, ru: ru, tr: tr, type: o.type || (o.pres || o.pr || o.pp ? 'irregular' : 'regular'), tags: o.tags || [], tenses: {}, vex: [] };
+  var sep = deSep(inf);
+  var bare = sep[0], part = sep[1];
+  var weakStem = deStem(bare);
+  var pres = o.pres || deWeakPresent(weakStem);
+  var pr = o.pr || deWeakPast(weakStem);
+  var pp = o.pp || deWeakPP(weakStem);
+  var auxIsS = o.aux === 's';
+  var A = auxIsS ? DE_AUX_S : DE_AUX_H;
+  var AS = auxIsS ? DE_AUX_SEIN : DE_AUX_HABEN;
+  var auxInf = auxIsS ? 'sein' : 'haben';
+  var display = function (forms) { return part ? forms.map(function (f) { return f + ' ' + part; }) : forms; };
+  var t = v.tenses;
+  t.pres = { rows: frTable(display(pres), DE_P, DE_T) };
+  t.pr = { rows: frTable(display(pr), DE_P, DE_T) };
+  t.perf = { rows: frTable(A.map(function (a) { return a + ' ' + pp; }), DE_P, DE_T) };
+  t.plus = { rows: frTable(AS.map(function (a) { return a + ' ' + pp; }), DE_P, DE_T) };
+  t.fut = { rows: frTable(DE_WERDEN.map(function (w) { return w + ' ' + inf; }), DE_P, DE_T) };
+  t.fut2 = { rows: frTable(DE_WERDEN.map(function (w) { return w + ' ' + pp + ' ' + auxInf; }), DE_P, DE_T) };
+  t.konj = { rows: frTable(DE_WUERDE.map(function (w) { return w + ' ' + inf; }), DE_P, DE_T) };
+  var imp = o.imp || [weakStem, (part ? weakStem + ' ' + part : weakStem + deConn(weakStem) + 't'), inf];
+  t.imp = { rows: frTable(imp, ['(du)', '(ihr)', '(Sie)'], ['', '', '']) };
+  if (o.ex) for (var k in o.ex) t[k].ex = o.ex[k];
+  VD.de[inf] = v;
+}
+TENSES.de = [
+  { id: 'pres',  name: 'Präsens',            ru: 'настоящее',                    aux: 'present — now & habits' },
+  { id: 'pr',    name: 'Präteritum',         ru: 'простое прошедшее',          aux: 'past simple — weak verbs add -te' },
+  { id: 'perf',  name: 'Perfekt',            ru: 'перфект (составное прошедшее)', aux: 'haben / sein (present) + past participle' },
+  { id: 'plus',  name: 'Plusquamperfekt',    ru: 'предпрошедшее',              aux: 'hatte / war + past participle' },
+  { id: 'fut',   name: 'Futur I',            ru: 'будущее время',              aux: 'werden + infinitive' },
+  { id: 'fut2',  name: 'Futur II',           ru: 'предбудущее',                aux: 'werden + participle + haben/sein' },
+  { id: 'konj',  name: 'Konjunktiv II',      ru: 'сослагательное наклонение',  aux: 'würde + infinitive' },
+  { id: 'imp',   name: 'Imperativ',          ru: 'повелительное наклонение',   aux: 'du / ihr / Sie' }
+];
+LANGS.de = { name: 'Deutsch', rname: 'немецкий', chip: 'DE', sample: ['sein', 'haben', 'gehen', 'sprechen', 'machen'], placeholder: 'Suchen Sie ein Verb… (z. B. sein, gehe, arbeiten)' };
+RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
+(function () {
+  var oldRuMode = ruMode;
+  ruMode = function (lang, tid) {
+    if (lang === 'de') {
+      var m = { pres:'pres', pr:'past', perf:'past', plus:'past', fut:'fut', fut2:'fut', konj:'cond', imp:'imp' };
+      return m[tid] || '';
+    }
+    return oldRuMode(lang, tid);
+  };
+})();
+`;
 head = head.replace('.tense-nav a{', '.tense-nav a,.tense-nav button{')
            .replace('.tense-nav a:hover{', '.tense-nav a:hover,.tense-nav button:hover{')
            .replace('.tense-nav a.current{', '.tense-nav a.current,.tense-nav button.current{');
@@ -576,12 +661,52 @@ const bridge = `
 })();
 `;
 
+/* Немецкий: вкладка в шапке + цвет маркера */
+head = head.replace(
+  '<span class="dot"></span>Español</button>',
+  '<span class="dot"></span>Español</button>\n      <button class="lang-tab" role="tab" data-lang="de" aria-selected="false"><span class="dot"></span>Deutsch</button>'
+);
+head = head.replace(
+  '.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}',
+  '.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}.lang-tab[data-lang="de"] .dot{background:#10b981}'
+);
+/* Немецкий: поиск, перекрёстные ссылки, роутинг */
+part3 = part3.replace(
+  "['en', 'fr', 'es'].forEach(function (lang) {",
+  "['en', 'fr', 'es', 'de'].forEach(function (lang) {"
+);
+part3 = part3.replace(
+  "['en', 'fr', 'es'].forEach(function (l) {",
+  "['en', 'fr', 'es', 'de'].forEach(function (l) {"
+);
+part3 = part3.replace(
+  'location.hash.match(/^#\\/(en|fr|es)\\/(.+)$/)',
+  'location.hash.match(/^#\\/(en|fr|es|de)\\/(.+)$/)'
+);
+part3 = part3.replace(
+  'function parseHash() {\n  var m = location.hash.match(/^#\\/(en|fr|es)\\/(.+)$/);',
+  'function parseHash() {\n  var m = location.hash.match(/^#\\/(en|fr|es|de)\\/(.+)$/);'
+);
+/* Немецкий: шаблоны примеров */
+part3 = part3.replace(
+  "  es: { pres: 'Yo {f}.', pc: 'Yo {f}.', pret: 'Ayer yo {f}.', impf: 'Antes yo {f}.',\n         plus: 'Yo {f}.', fut: 'Mañana yo {f}.', fc: 'Yo {f}.',\n         cond: 'Yo {f} si pudiera.', cc: 'Yo {f}.', subj: 'Espero que yo {f}.',\n         simp: 'Si yo {f}, sería mejor.', sp: 'No creo que yo {f}.', imp: '{f}!' }",
+  "  es: { pres: 'Yo {f}.', pc: 'Yo {f}.', pret: 'Ayer yo {f}.', impf: 'Antes yo {f}.',\n         plus: 'Yo {f}.', fut: 'Mañana yo {f}.', fc: 'Yo {f}.',\n         cond: 'Yo {f} si pudiera.', cc: 'Yo {f}.', subj: 'Espero que yo {f}.',\n         simp: 'Si yo {f}, sería mejor.', sp: 'No creo que yo {f}.', imp: '{f}!' },\n  de: { pres: 'Ich {f}.', pr: 'Ich {f}.', perf: 'Ich {f}.', plus: 'Ich {f}.',\n         fut: 'Ich {f}.', fut2: 'Ich {f}.', konj: 'Ich {f}.', imp: '{f}!' }"
+);
+/* Немецкий: лендинг */
+part3 = part3.replace(
+  'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — hundreds of B2 verbs, with example sentences, translations and audio for every form.',
+  'Look up a verb in <b>English</b>, <b>French</b>, <b>Spanish</b> or <b>German</b> and see its complete conjugation — hundreds of B2 verbs, with example sentences, translations and audio for every form.'
+);
+/* Немецкий: файл данных */
+const GERMAN_SCRIPT = '<script src="data/extra_de.js"></script>\n';
+
 const out =
   head +
   part1 + '\n</script>\n' +
   '<script src="data/extra_en.js"></script>\n' +
   '<script src="data/extra_fr.js"></script>\n' +
   '<script src="data/extra_es.js"></script>\n' +
+  GERMAN_SCRIPT +
   '<script src="data/english.js"></script>\n' +
   '<script src="data/french.js"></script>\n' +
   '<script src="data/spanish.js"></script>\n' +
