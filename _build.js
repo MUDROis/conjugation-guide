@@ -664,7 +664,7 @@ const bridge = `
 /* Мета: title + description + Open Graph с кириллическим доменом */
 head = head.replace(
   '<title>Conjugation — English · Français · Español</title>',
-  '<title>Conjugation — English · Français · Español · Deutsch</title>'
+  '<title>Conjugation — English · Français · Español · Deutsch</title>\n  <link rel="icon" type="image/png" href="favicon32.png">'
 );
 var META_OLD_DESC = '<meta name="description" content="Search a verb in English, French or Spanish and see its full conjugation tables with example sentences and audio for every form.">';
 var META_NEW_DESC = '<meta name="description" content="Search a verb in English, French, Spanish or German and see its full conjugation tables with example sentences, translations and audio for every form.">';
