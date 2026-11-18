@@ -661,6 +661,16 @@ const bridge = `
 })();
 `;
 
+/* Немецкий: мета-теги */
+head = head.replace(
+  '<title>Conjugation — English · Français · Español</title>',
+  '<title>Conjugation — English · Français · Español · Deutsch</title>'
+);
+head = head.replace(
+  '<meta name="description" content="Search a verb in English, French or Spanish and see its full conjugation tables with example sentences and audio for every form.">',
+  '<meta name="description" content="Search a verb in English, French, Spanish or German and see its full conjugation tables with example sentences, translations and audio for every form.">'
+);
+
 /* Немецкий: вкладка в шапке + цвет маркера */
 head = head.replace(
   '<span class="dot"></span>Español</button>',
