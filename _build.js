@@ -661,15 +661,26 @@ const bridge = `
 })();
 `;
 
-/* Немецкий: мета-теги */
+/* Мета: title + description + Open Graph с кириллическим доменом */
 head = head.replace(
   '<title>Conjugation — English · Français · Español</title>',
   '<title>Conjugation — English · Français · Español · Deutsch</title>'
 );
-head = head.replace(
-  '<meta name="description" content="Search a verb in English, French or Spanish and see its full conjugation tables with example sentences and audio for every form.">',
-  '<meta name="description" content="Search a verb in English, French, Spanish or German and see its full conjugation tables with example sentences, translations and audio for every form.">'
-);
+var META_OLD_DESC = '<meta name="description" content="Search a verb in English, French or Spanish and see its full conjugation tables with example sentences and audio for every form.">';
+var META_NEW_DESC = '<meta name="description" content="Search a verb in English, French, Spanish or German and see its full conjugation tables with example sentences, translations and audio for every form.">';
+var OG_TAGS =
+  '\n  <meta property="og:type" content="website">' +
+  '\n  <meta property="og:title" content="Conjugation Guide — English · Français · Español · Deutsch">' +
+  '\n  <meta property="og:description" content="Поиск глаголов и таблицы спряжений по всем временам: английский, французский, испанский, немецкий. Примеры, переводы и озвучка каждой формы.">' +
+  '\n  <meta property="og:url" content="https://интерактивнаяшкола.рф/conjugation-guide/">' +
+  '\n  <meta property="og:site_name" content="Интерактивная школа «МУДРО»">' +
+  '\n  <meta property="og:image" content="https://интерактивнаяшкола.рф/conjugation-guide/logo.png">' +
+  '\n  <meta property="og:locale" content="ru_RU">' +
+  '\n  <meta name="twitter:card" content="summary">';
+if (head.includes(META_OLD_DESC)) head = head.replace(META_OLD_DESC, META_NEW_DESC + OG_TAGS);
+else if (head.includes(META_NEW_DESC)) head = head.replace(META_NEW_DESC, META_NEW_DESC + OG_TAGS);
+/* Кириллический домен вместо punycode в ссылках */
+head = head.split('https://xn--80aaagnrcpdkofpu2ae0iuf.xn--p1ai').join('https://интерактивнаяшкола.рф');
 
 /* Немецкий: вкладка в шапке + цвет маркера */
 head = head.replace(
