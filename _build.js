@@ -844,15 +844,19 @@ head = ensureTags(head, [
 /* Кириллический домен вместо punycode в ссылках */
 head = head.split('https://xn--80aaagnrcpdkofpu2ae0iuf.xn--p1ai').join('https://интерактивнаяшкола.рф');
 
-/* Немецкий: вкладка в шапке + цвет маркера */
-head = head.replace(
-  '<span class="dot"></span>Español</button>',
-  '<span class="dot"></span>Español</button>\n      <button class="lang-tab" role="tab" data-lang="de" aria-selected="false"><span class="dot"></span>Deutsch</button>'
-);
-head = head.replace(
-  '.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}',
-  '.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}.lang-tab[data-lang="de"] .dot{background:#10b981}'
-);
+/* Немецкий: вкладка в шапке + цвет маркера (идемпотентно) */
+if (!head.includes('data-lang="de" aria-selected')) {
+  head = head.replace(
+    '<span class="dot"></span>Español</button>',
+    '<span class="dot"></span>Español</button>\n      <button class="lang-tab" role="tab" data-lang="de" aria-selected="false"><span class="dot"></span>Deutsch</button>'
+  );
+}
+if (!head.includes('data-lang="de"] .dot')) {
+  head = head.replace(
+    '.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}',
+    '.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}.lang-tab[data-lang="de"] .dot{background:#10b981}'
+  );
+}
 /* Немецкий: поиск, перекрёстные ссылки, роутинг */
 part3 = part3.replace(
   "['en', 'fr', 'es'].forEach(function (lang) {",
