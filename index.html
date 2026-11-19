@@ -1304,6 +1304,20 @@ function deSep(inf) {
   var i = inf.indexOf(' ');
   return i > 0 ? [inf.slice(0, i), inf.slice(i + 1)] : [inf, ''];
 }
+
+/* ============ German conjugation engine ============ */
+var DE_P = ['ich', 'du', 'er / sie / es', 'wir', 'ihr', 'sie / Sie'];
+var DE_T = ['ich', 'du', 'er', 'wir', 'ihr', 'sie'];
+var DE_AUX_H = ['habe', 'hast', 'hat', 'haben', 'habt', 'haben'];
+var DE_AUX_S = ['bin', 'bist', 'ist', 'sind', 'seid', 'sind'];
+var DE_AUX_HABEN = ['hatte', 'hattest', 'hatte', 'hatten', 'hattet', 'hatten'];
+var DE_AUX_SEIN = ['war', 'warst', 'war', 'waren', 'wart', 'waren'];
+var DE_WERDEN = ['werde', 'wirst', 'wird', 'werden', 'werdet', 'werden'];
+var DE_WUERDE = ['würde', 'würdest', 'würde', 'würden', 'würdet', 'würden'];
+function deSep(inf) {
+  var i = inf.indexOf(' ');
+  return i > 0 ? [inf.slice(0, i), inf.slice(i + 1)] : [inf, ''];
+}
 function deConn(stem) { return /[td]$/.test(stem) ? 'e' : ''; }
 function deStem(bare) {
   if (/en$/.test(bare)) return bare.slice(0, -2);
@@ -1376,8 +1390,8 @@ RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
 <script src="data/extra_en.js"></script>
 <script src="data/extra_fr.js"></script>
 <script src="data/extra_es.js"></script>
-<script src="data/extra_de.js"></script>
 <script src="data/ru_aspect.js"></script>
+<script src="data/extra_de.js"></script>
 <script src="data/english.js"></script>
 <script src="data/french.js"></script>
 <script src="data/spanish.js"></script>
@@ -1422,7 +1436,7 @@ RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
         for (var i = 0; i < forms.length; i++) rows.push([PR[i] || '', forms[i], PR[i] || '']);
         v.tenses[tid] = { rows: rows };
         if (td.example && String(td.example).trim() && String(td.example).indexOf('—') === -1) {
-          v.tenses[tid].ex = [{ s: td.example, t: null, ru: ruGloss(lang, tid, 0, v) || null }];
+          v.tenses[tid].ex = [{ s: td.example, t: null, ru: ruGloss(lang, tid, 0, v, rows[0]) || null }];
         }
       });
       VD[lang][inf] = v;

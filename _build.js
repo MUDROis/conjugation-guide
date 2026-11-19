@@ -71,13 +71,13 @@ var RU_PRON = {
 };
 function ruMode(lang, tid) {
   var m = {
-    en: { pres:'pres', prescont:'pres', presperf:'pres', presperfcont:'pres', goto:'pres',
-          past:'past', pastcont:'past', pastperf:'past', pastperfcont:'past',
-          fut:'fut', futcont:'fut', futperf:'fut', cond:'cond' },
-    fr: { pres:'pres', impf:'past', pc:'past', pq:'past', fut:'fut', fa:'fut', ps:'past',
-          cond:'cond', cp:'cond', subj:'pres', sp:'past', imp:'imp' },
-    es: { pres:'pres', pc:'past', pret:'past', impf:'past', plus:'past', fut:'fut', fc:'fut',
-          cond:'cond', cc:'cond', subj:'pres', sp:'past', simp:'past', imp:'imp' }
+    en: { pres:'pres', prescont:'pres', presperf:'pfpast', presperfcont:'pres', goto:'pres',
+          past:'past', pastcont:'past', pastperf:'pfpast', pastperfcont:'past',
+          fut:'fut', futcont:'fut', futperf:'pffut', cond:'cond' },
+    fr: { pres:'pres', impf:'past', pc:'pfpast', pq:'pfpast', fut:'fut', fa:'pffut', ps:'pfpast',
+          cond:'cond', cp:'pfcond', subj:'pres', sp:'pfpast', imp:'imp' },
+    es: { pres:'pres', pc:'pfpast', pret:'pfpast', impf:'past', plus:'pfpast', fut:'fut', fc:'pffut',
+          cond:'cond', cc:'pfcond', subj:'pres', sp:'pfpast', simp:'past', imp:'imp' }
   };
   return (m[lang] || {})[tid] || '';
 }
@@ -356,8 +356,13 @@ var RU_PAST_IRR = {
 function ruPast(inf, person) {
   var refl = /ться$/.test(inf);
   var bare = refl ? inf.slice(0, -2) : inf;              // заботиться -> заботить
-  if (RU_PAST_IRR[inf]) return RU_PAST_IRR[inf][person === 3 || person === 4 || person === 5 ? 3 : person === 2 ? 1 : 0];
+  if (RU_PAST_IRR[inf]) {
+    var irr = RU_PAST_IRR[inf];
+    if (person === 2) return irr[0] + ' / ' + irr[1];    // он/она
+    return irr[person === 3 || person === 4 || person === 5 ? 3 : person === 2 ? 1 : 0];
+  }
   var stem = ruStem(bare); if (!stem) return '';
+  if (person === 2) return (stem + 'л' + (refl ? 'ся' : '')) + ' / ' + (stem + 'ла' + (refl ? 'сь' : ''));
   var f = (person === 3 || person === 4 || person === 5) ? stem + 'ли' : stem + 'л';
   if (refl) f += (person === 3 || person === 4 || person === 5) ? 'сь' : 'ся';
   return f;
@@ -366,7 +371,77 @@ function ruFut(inf, person) {
   var aux = ['буду', 'будешь', 'будет', 'будем', 'будете', 'будут'][person];
   return aux + ' ' + inf;
 }
-function ruGloss(lang, tid, person, v) {
+/* Вид русского инфинитива: 'perf' (совершенный) / 'impf' / '' (неизвестно) */
+function ruAspectOf(inf) {
+  var A = window.RU_ASPECT;
+  return (A && A.aspect && A.aspect[inf]) || '';
+}
+/* Совершенный инфинитив, у которого есть готовые формы */
+function ruPerfective(inf) {
+  var A = window.RU_ASPECT;
+  if (!A || !A.forms) return '';
+  if (A.forms[inf] && ruAspectOf(inf) !== 'impf') return inf;
+  var pf = A.pf && A.pf[inf];
+  if (pf && pf !== inf && A.forms[pf]) return pf;
+  return '';
+}
+/* Несовершенный инфинитив (для настоящего и прошедшего несовершенного) */
+function ruImperfective(inf) {
+  var A = window.RU_ASPECT;
+  if (ruAspectOf(inf) !== 'perf') return inf;
+  var ipf = A && A.ipf && A.ipf[inf];
+  if (ipf && ruAspectOf(ipf) !== 'perf') return ipf;
+  return '';
+}
+/* Прошедшее время: у «он/она» показываем оба рода, как в словарях */
+function ruPastBoth(formM, formF) {
+  return (formM && formF && formM !== formF) ? formM + ' / ' + formF : (formF || formM || '');
+}
+/* Форма совершенного глагола: [я, ты, он, мы, вы, они, м, ж, ср, мн] */
+function ruPfForm(inf, index) {
+  var A = window.RU_ASPECT;
+  var f = A && A.forms && A.forms[inf];
+  return (f && f[index]) || '';
+}
+/* Совершенное прошедшее: у «он/она» показываем оба рода */
+function ruPfPast(inf, person) {
+  var A = window.RU_ASPECT;
+  var f = A && A.forms && A.forms[inf];
+  if (!f) return '';
+  if (person === 2) return ruPastBoth(f[6], f[7]);
+  return f[6 + ruPfPastIndex(person)] || '';
+}
+/* Настоящее время несовершенного глагола из готовых таблиц (если есть) */
+function ruPresData(inf, person) {
+  var A = window.RU_ASPECT;
+  var f = A && A.pres && A.pres[inf];
+  return (f && f[person]) || '';
+}
+/* Прошедшее время из готовых таблиц (если есть) */
+function ruPastData(inf, person) {
+  var A = window.RU_ASPECT;
+  var f = A && A.past && A.past[inf];
+  if (!f) return '';
+  if (person === 2) return ruPastBoth(f[0], f[1]);
+  return f[ruPfPastIndex(person)] || '';
+}
+function ruPfPastIndex(person) {
+  return (person === 3 || person === 4 || person === 5) ? 3 : (person === 2 ? 1 : 0);
+}
+/* Кому адресовано повелительное наклонение: 'sg' (ты/du/tu), 'pl' (вы/ihr/vous), 'we' (nous/nosotros) */
+function ruImperSlot(lang, row, person) {
+  var pron = String((row && row[0]) || '').toLowerCase();
+  if (/nous|nosotros|nosotras/.test(pron)) return 'we';
+  if (/usted|ustedes/.test(pron)) return 'pl';
+  if (/\\btu\\b|tú|\\bdu\\b/.test(pron)) return 'sg';
+  if (/vous|ihr|sie/.test(pron)) return 'pl';
+  /* запасной вариант по индексу строки */
+  if (lang === 'fr') return person === 1 ? 'we' : (person === 2 ? 'pl' : 'sg');
+  if (lang === 'es') return person === 2 ? 'we' : (person === 0 ? 'sg' : 'pl');
+  if (lang === 'de') return person === 0 ? 'sg' : 'pl';
+  return 'sg';
+}
+function ruGloss(lang, tid, person, v, row) {
   var mode = ruMode(lang, tid);
   if (!mode) return '';
   var ru = v.ru || '';
@@ -385,30 +460,87 @@ function ruGloss(lang, tid, person, v) {
   if (!inf) return '';
   var P = RU_PRON[lang] || RU_PRON.en;
   var pron = P[person] || '';
-  if (mode === 'pres') {
-    var f = ruFinite(inf, person);
-    return f ? pron + ' ' + f : '';
+
+  /* Совершенные времена: перевод тоже должен быть совершенного вида */
+  if (mode === 'pfpast' || mode === 'pffut' || mode === 'pfcond' || mode === 'pfpres') {
+    var pfinf = ruPerfective(inf);
+    if (pfinf) {
+      var isPast = mode === 'pfpast' || mode === 'pfcond';
+      var f = isPast ? ruPfPast(pfinf, person) : ruPfForm(pfinf, person);
+      if (!f) return '';
+      if (mode === 'pfcond') return pron + ' бы ' + f;
+      return pron + ' ' + f;
+    }
+    /* видовой пары нет — переходим на несовершенные формы */
+    mode = mode === 'pffut' ? 'fut' : (mode === 'pfcond' ? 'cond' : (mode === 'pfpres' ? 'pres' : 'past'));
   }
-  if (mode === 'past') {
-    var p = ruPast(inf, person);
-    return p ? pron + ' ' + p : '';
+
+  /* Настоящее, прошедшее и повелительное: несовершенный вид */
+  if (mode === 'pres' || mode === 'past' || mode === 'imp') {
+    var ipf = ruImperfective(inf);
+    if (!ipf) {
+      /* совершенный глагол без видовой пары — берём готовые совершенные формы */
+      var pfOnly = ruPerfective(inf);
+      if (pfOnly) {
+        if (mode === 'imp') {
+          var imper = (window.RU_ASPECT.imper && window.RU_ASPECT.imper[pfOnly]) || [];
+          if (!imper.length) return '';
+          var pslot = ruImperSlot(lang, row, person);
+          if (pslot === 'we') return 'давайте ' + ruPfForm(pfOnly, 3) + '!';
+          return pslot === 'pl' ? imper[1] + '!' : imper[0] + '!';
+        }
+        var pf = mode === 'pres' ? ruPfForm(pfOnly, person) : ruPfPast(pfOnly, person);
+        return pf ? pron + ' ' + pf : '';
+      }
+      ipf = inf;
+    }
+    if (mode === 'pres') {
+      var f2 = ruPresData(ipf, person) || ruFinite(ipf, person);
+      return f2 ? pron + ' ' + f2 : '';
+    }
+    if (mode === 'past') {
+      var p = ruPastData(ipf, person) || ruPast(ipf, person);
+      return p ? pron + ' ' + p : '';
+    }
+    var imp = ruImper(ipf);
+    if (!imp) return '';
+    var slot = ruImperSlot(lang, row, person);
+    if (slot === 'we') return (ipf === 'быть' ? 'будем!' : 'давайте ' + ipf + '!');
+    return slot === 'pl' ? imp + 'те!' : imp + '!';
+  }
+
+  /* Будущее и условное: вид исходного русского перевода сохраняем */
+  if (ruAspectOf(inf) === 'perf') {
+    var pfInf = ruPerfective(inf);
+    if (pfInf) {
+      var f3 = mode === 'fut' ? ruPfForm(pfInf, person) : ruPfPast(pfInf, person);
+      if (!f3) return '';
+      return mode === 'cond' ? pron + ' бы ' + f3 : pron + ' ' + f3;
+    }
   }
   if (mode === 'fut') {
     if (inf === 'быть') return pron + ' ' + ['буду', 'будешь', 'будет', 'будем', 'будете', 'будут'][person];
     return pron + ' ' + ruFut(inf, person);
   }
   if (mode === 'cond') {
-    var c = ruPast(inf, person);
+    var c = ruPastData(inf, person) || ruPast(inf, person);
     return c ? pron + ' бы ' + c : '';
   }
-  if (mode === 'imp') {
-    var imp = ruImper(inf);
-    if (!imp) return '';
-    if (person === 0) return imp + '!';
-    if (person === 2) return (inf === 'быть' ? 'будем!' : 'давайте ' + inf + '!');
-    return imp + 'те!';
-  }
   return '';
+}
+
+/* ============ German conjugation engine ============ */
+var DE_P = ['ich', 'du', 'er / sie / es', 'wir', 'ihr', 'sie / Sie'];
+var DE_T = ['ich', 'du', 'er', 'wir', 'ihr', 'sie'];
+var DE_AUX_H = ['habe', 'hast', 'hat', 'haben', 'habt', 'haben'];
+var DE_AUX_S = ['bin', 'bist', 'ist', 'sind', 'seid', 'sind'];
+var DE_AUX_HABEN = ['hatte', 'hattest', 'hatte', 'hatten', 'hattet', 'hatten'];
+var DE_AUX_SEIN = ['war', 'warst', 'war', 'waren', 'wart', 'waren'];
+var DE_WERDEN = ['werde', 'wirst', 'wird', 'werden', 'werdet', 'werden'];
+var DE_WUERDE = ['würde', 'würdest', 'würde', 'würden', 'würdet', 'würden'];
+function deSep(inf) {
+  var i = inf.indexOf(' ');
+  return i > 0 ? [inf.slice(0, i), inf.slice(i + 1)] : [inf, ''];
 }
 `;
 
@@ -494,7 +626,7 @@ RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
   var oldRuMode = ruMode;
   ruMode = function (lang, tid) {
     if (lang === 'de') {
-      var m = { pres:'pres', pr:'past', perf:'past', plus:'past', fut:'fut', fut2:'fut', konj:'cond', imp:'imp' };
+      var m = { pres:'pres', pr:'past', perf:'pfpast', plus:'pfpast', fut:'fut', fut2:'pffut', konj:'cond', imp:'imp' };
       return m[tid] || '';
     }
     return oldRuMode(lang, tid);
@@ -524,7 +656,7 @@ part3 = part3.replace(
 );
 part3 = part3.replace(
   "    data.rows.forEach(function (row) {\n      var tts = rowTTS(lang, row);\n      html += '<tr><td class=\"pron\">' + esc(rowDisplayPron(lang, row)) + '</td><td class=\"form\">' + allowB(row[1]) + '</td><td class=\"audio-cell\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen: ' + esc(tts) + '\">' + SPK + '</button></td></tr>';\n    });",
-  "    data.rows.forEach(function (row, ri) {\n      var tts = rowTTS(lang, row);\n      var gl = ruGloss(lang, t.id, ri, v);\n      html += '<tr><td class=\"pron\">' + esc(rowDisplayPron(lang, row)) + '</td><td class=\"form\">' + allowB(row[1]) + '</td>' +\n        '<td class=\"gloss\">' + (gl ? esc(gl) : '') + '</td>' +\n        '<td class=\"audio-cell\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen: ' + esc(tts) + '\">' + SPK + '</button></td></tr>';\n    });"
+  "    data.rows.forEach(function (row, ri) {\n      var tts = rowTTS(lang, row);\n      var gl = ruGloss(lang, t.id, ri, v, row);\n      html += '<tr><td class=\"pron\">' + esc(rowDisplayPron(lang, row)) + '</td><td class=\"form\">' + allowB(row[1]) + '</td>' +\n        '<td class=\"gloss\">' + (gl ? esc(gl) : '') + '</td>' +\n        '<td class=\"audio-cell\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen: ' + esc(tts) + '\">' + SPK + '</button></td></tr>';\n    });"
 );
 
 // --- 9) Примеры: декодирование сущностей + автогенерация примера под каждым временем
@@ -554,7 +686,7 @@ function exampleHtml(ex, lang) {
 );
 part3 = part3.replace(
   "    html += '</div>';\n    if (data.ex && data.ex.length) html += '<div class=\"examples\">' + data.ex.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';",
-  "    html += '</div>';\n    var exList = data.ex || [];\n    if (!exList.length) {\n      var r0 = data.rows[0] || [];\n      var f0 = stripTags(r0[1] || '');\n      if (f0) {\n        var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';\n        var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');\n        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: ruGloss(lang, t.id, 0, v) || null }];\n      }\n    }\n    if (exList.length) html += '<div class=\"examples\">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';"
+  "    html += '</div>';\n    var exList = data.ex || [];\n    if (!exList.length) {\n      var r0 = data.rows[0] || [];\n      var f0 = stripTags(r0[1] || '');\n      if (f0) {\n        var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';\n        var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');\n        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: ruGloss(lang, t.id, 0, v, r0) || null }];\n      }\n    }\n    if (exList.length) html += '<div class=\"examples\">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';"
 );
 /* Удалить осиротевший дубль тела exampleHtml (если остался от старых правок) */
 const STRAY_EXAMPLE = "\n  var tts = stripTags(ex.s);\n  var html = '<div class=\"example\"><button class=\"spk\" data-tts=\"' + esc(tts) + '\" data-lang=\"' + lang + '\" aria-label=\"Listen to example\">' + SPK + '</button><div class=\"ex-body\"><div class=\"ex-sentence\">' + allowB(ex.s) + '</div>';\n  if (ex.t) html += '<div class=\"ex-trans\">' + esc(ex.t) + '</div>';\n  if (ex.ru) html += '<div class=\"ex-trans ru\">' + esc(ex.ru) + '</div>';\n  return html + '</div></div>';\n}";
@@ -652,7 +784,7 @@ const bridge = `
         for (var i = 0; i < forms.length; i++) rows.push([PR[i] || '', forms[i], PR[i] || '']);
         v.tenses[tid] = { rows: rows };
         if (td.example && String(td.example).trim() && String(td.example).indexOf('—') === -1) {
-          v.tenses[tid].ex = [{ s: td.example, t: null, ru: ruGloss(lang, tid, 0, v) || null }];
+          v.tenses[tid].ex = [{ s: td.example, t: null, ru: ruGloss(lang, tid, 0, v, rows[0]) || null }];
         }
       });
       VD[lang][inf] = v;
@@ -727,6 +859,7 @@ const out =
   '<script src="data/extra_en.js"></script>\n' +
   '<script src="data/extra_fr.js"></script>\n' +
   '<script src="data/extra_es.js"></script>\n' +
+  '<script src="data/ru_aspect.js"></script>\n' +
   GERMAN_SCRIPT +
   '<script src="data/english.js"></script>\n' +
   '<script src="data/french.js"></script>\n' +
