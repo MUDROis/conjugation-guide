@@ -5,7 +5,7 @@ const vm = require('vm');
 const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
-const re = /<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g;
+const re = /<script(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/g;
 const blocks = [];
 let m;
 while ((m = re.exec(html))) { if (m[1].trim()) blocks.push(m[1]); }

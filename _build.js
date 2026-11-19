@@ -1,29 +1,33 @@
-// Сборка финального index.html:
-//   UI/движок — из verb-conjugation (1).html (вариант C)
-//   Большой верифицированный словарь — из outputs/data (вариант A)
-// Патчи:
-//   1. Рендер заметок/примеров: <i> и сущности (&#39; и т.п.) отображаются корректно
-//   2. Русский перевод для каждой формы (колонка «Перевод» в таблицах)
-//   3. У испанских глаголов всегда есть Imperativo
+// Сборка финального index.html.
+// Источник — актуальный index.html (снапшот), который содержит весь движок,
+// разметку и данные-скрипты. Повторная сборка идемпотентна.
 const fs = require('fs');
+const path = require('path');
 
-const C = fs.readFileSync('C:/Users/Lenovo/Downloads/verb-conjugation (1).html', 'utf8');
-const OUT = 'C:/Users/Lenovo/Downloads/06_Проекты/Conjugation-guide/index.html';
+const BASE = 'C:/Users/Lenovo/Downloads/06_Проекты/Conjugation-guide';
+const OUT = path.join(BASE, 'index.html');
+const SRC = fs.readFileSync(OUT, 'utf8').replace(/\r\n/g, '\n'); // текущий собранный файл как источник
 
-// --- маркеры разрезания (внутри исходного <script>)
 const OPEN_TAG = '<script>\n';
-const EN_DATA_COMMENT = '/* ============ English data: 12 core verbs';
-const SEARCH_INDEX = '/* ================= Search index';
+const openIdx = SRC.indexOf(OPEN_TAG);
+if (openIdx < 0) throw new Error('inline open not found');
+const close1 = SRC.indexOf('</script>', openIdx);
+if (close1 < 0) throw new Error('inline close1 not found');
+const open2 = SRC.indexOf(OPEN_TAG, close1);
+if (open2 < 0) throw new Error('inline open2 not found');
+const close2 = SRC.lastIndexOf('</script>');
+if (close2 < 0 || close2 <= open2) throw new Error('inline close2 not found');
 
-const openIdx = C.indexOf(OPEN_TAG) + OPEN_TAG.length;
-const enDataIdx = C.indexOf(EN_DATA_COMMENT, openIdx);
-const searchIdx = C.indexOf(SEARCH_INDEX, enDataIdx);
-if (openIdx < 0 || enDataIdx < 0 || searchIdx < 0) throw new Error('markers not found');
-
-let head = C.slice(0, openIdx);                       // HTML до <script>
-let part1 = C.slice(openIdx, enDataIdx);              // утилиты + движки
-const part2 = C.slice(enDataIdx, searchIdx);          // богатые вызовы ENG/FRG/SPG + ADD
-let part3 = C.slice(searchIdx);                       // поиск + приложение + закрытие
+let head = SRC.slice(0, openIdx);                              // HTML до первого inline-скрипта
+let part1 = SRC.slice(openIdx + OPEN_TAG.length, close1);      // движок + глоссы
+const dataScripts = SRC.match(/<script src="data\/[^"]+"><\/script>\n/g) || [];
+if (!dataScripts.length) throw new Error('data scripts not found');
+let part3 = SRC.slice(open2 + OPEN_TAG.length, close2);        // мост + приложение + закрытие
+const tail = SRC.slice(close2 + '</script>'.length);           // '\n</body>\n</html>\n'
+const part2 = ''; // вызовы данных больше не встроены в inline (лежат в data-файлах)
+const GERMAN_SCRIPT = '';
+const bridge = '';
+const ensureImp = '';
 
 // --- 1) В TENSES.en добавить английский Conditional (есть в данных A); в TENSES.es — Imperativo
 const gotoLine = "    { id: 'goto',         name: 'Future (going to)',          ru: 'намеренное будущее',         aux: 'am / is / are going to + base form' }";
@@ -62,6 +66,7 @@ part1 = part1.replace(
 );
 
 // --- 5) Движок русских глоссов для форм (v3: полноценная модель спряжения)
+if (!part1.includes('Russian glosses for conjugated forms (v3)')) {
 part1 += `
 /* ================= Russian glosses for conjugated forms (v3) ================= */
 var RU_PRON = {
@@ -543,6 +548,7 @@ function deSep(inf) {
   return i > 0 ? [inf.slice(0, i), inf.slice(i + 1)] : [inf, ''];
 }
 `;
+}
 
 // --- 6) verbTrans рендерится без пустых секций + декодирование + 3 формы английских неправильных
 part3 = part3.replace(
@@ -551,6 +557,7 @@ part3 = part3.replace(
 );
 
 // --- 14) Немецкий язык: движок, времён, язык, глоссы
+if (!part1.includes('German conjugation engine')) {
 part1 += `
 /* ============ German conjugation engine ============ */
 var DE_P = ['ich', 'du', 'er / sie / es', 'wir', 'ihr', 'sie / Sie'];
@@ -633,6 +640,8 @@ RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
   };
 })();
 `;
+}
+
 head = head.replace('.tense-nav a{', '.tense-nav a,.tense-nav button{')
            .replace('.tense-nav a:hover{', '.tense-nav a:hover,.tense-nav button:hover{')
            .replace('.tense-nav a.current{', '.tense-nav a.current,.tense-nav button.current{');
@@ -660,6 +669,7 @@ part3 = part3.replace(
 );
 
 // --- 9) Примеры: декодирование сущностей + автогенерация примера под каждым временем
+if (!part3.includes('var EX_PATTERN')) {
 part3 = part3.replace(
   "function exampleHtml(ex, lang) {",
   `var EX_PATTERN = {
@@ -684,6 +694,8 @@ function exampleHtml(ex, lang) {
   return html + '</div></div>';
 }`
 );
+}
+
 part3 = part3.replace(
   "    html += '</div>';\n    if (data.ex && data.ex.length) html += '<div class=\"examples\">' + data.ex.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';",
   "    html += '</div>';\n    var exList = data.ex || [];\n    if (!exList.length) {\n      var r0 = data.rows[0] || [];\n      var f0 = stripTags(r0[1] || '');\n      if (f0) {\n        var pat = EX_PATTERN[lang] && EX_PATTERN[lang][t.id] || '{p} {f}.';\n        var s = pat.replace('{f}', f0).replace('{p}', rowDisplayPron(lang, r0) || '');\n        exList = [{ s: s.replace(f0, '<b>' + f0 + '</b>'), t: null, ru: ruGloss(lang, t.id, 0, v, r0) || null }];\n      }\n    }\n    if (exList.length) html += '<div class=\"examples\">' + exList.map(function (ex) { return exampleHtml(ex, lang); }).join('') + '</div>';\n    html += '</section>';"
@@ -724,7 +736,7 @@ head = head.replace(
   '<span class="brand-mark">C⟫</span>',
   '<img class="brand-logo" src="logo.png" alt="Интерактивная школа">'
 );
-const ensureImp = `
+const ensureImp_OLD = `
 /* ================= Ensure Spanish imperative exists ================= */
 (function () {
   Object.keys(VD.es || {}).forEach(function (inf) {
@@ -744,7 +756,7 @@ const ensureImp = `
 })();
 `;
 
-const bridge = `
+const bridge_OLD = `
 /* ================= Data bridge: large verified datasets (EN 160 / FR 147 / ES 151) ================= */
 (function () {
   var AI_MAP = {
@@ -793,24 +805,42 @@ const bridge = `
 })();
 `;
 
-/* Мета: title + description + Open Graph с кириллическим доменом */
+/* Мета: title + description + Open Graph + SEO (аддитивно, только недостающие теги) */
 head = head.replace(
   '<title>Conjugation — English · Français · Español</title>',
   '<title>Conjugation — English · Français · Español · Deutsch</title>\n  <link rel="icon" type="image/png" href="favicon32.png">'
 );
 var META_OLD_DESC = '<meta name="description" content="Search a verb in English, French or Spanish and see its full conjugation tables with example sentences and audio for every form.">';
 var META_NEW_DESC = '<meta name="description" content="Search a verb in English, French, Spanish or German and see its full conjugation tables with example sentences, translations and audio for every form.">';
-var OG_TAGS =
-  '\n  <meta property="og:type" content="website">' +
-  '\n  <meta property="og:title" content="Conjugation Guide — English · Français · Español · Deutsch">' +
-  '\n  <meta property="og:description" content="Поиск глаголов и таблицы спряжений по всем временам: английский, французский, испанский, немецкий. Примеры, переводы и озвучка каждой формы.">' +
-  '\n  <meta property="og:url" content="https://интерактивнаяшкола.рф/conjugation-guide/">' +
-  '\n  <meta property="og:site_name" content="Интерактивная школа «МУДРО»">' +
-  '\n  <meta property="og:image" content="https://интерактивнаяшкола.рф/conjugation-guide/logo.png">' +
-  '\n  <meta property="og:locale" content="ru_RU">' +
-  '\n  <meta name="twitter:card" content="summary">';
-if (head.includes(META_OLD_DESC)) head = head.replace(META_OLD_DESC, META_NEW_DESC + OG_TAGS);
-else if (head.includes(META_NEW_DESC)) head = head.replace(META_NEW_DESC, META_NEW_DESC + OG_TAGS);
+if (head.includes(META_OLD_DESC)) head = head.replace(META_OLD_DESC, META_NEW_DESC);
+function ensureTags(html, tags) {
+  var missing = '';
+  for (var i = 0; i < tags.length; i++) {
+    if (!html.includes(tags[i][0])) missing += '\n  ' + tags[i][1];
+  }
+  return missing ? html.replace('</head>', missing + '\n</head>') : html;
+}
+head = ensureTags(head, [
+  ['property="og:type"', '<meta property="og:type" content="website">'],
+  ['property="og:title"', '<meta property="og:title" content="Conjugation Guide — English · Français · Español · Deutsch">'],
+  ['property="og:description"', '<meta property="og:description" content="Поиск глаголов и таблицы спряжений по всем временам: английский, французский, испанский, немецкий. Примеры, переводы и озвучка каждой формы.">'],
+  ['property="og:url"', '<meta property="og:url" content="https://интерактивнаяшкола.рф/conjugation-guide/">'],
+  ['property="og:site_name"', '<meta property="og:site_name" content="Интерактивная школа «МУДРО»">'],
+  ['property="og:image"', '<meta property="og:image" content="https://интерактивнаяшкола.рф/conjugation-guide/logo.png">'],
+  ['property="og:locale" content="ru_RU"', '<meta property="og:locale" content="ru_RU">'],
+  ['property="og:locale:alternate"', '<meta property="og:locale:alternate" content="en_US">'],
+  ['name="twitter:card"', '<meta name="twitter:card" content="summary">'],
+  ['name="twitter:title"', '<meta name="twitter:title" content="Conjugation Guide — English · Français · Español · Deutsch">'],
+  ['name="twitter:description"', '<meta name="twitter:description" content="Поиск глаголов и таблицы спряжений: английский, французский, испанский, немецкий. Примеры, переводы и озвучка.">'],
+  ['name="twitter:image"', '<meta name="twitter:image" content="https://интерактивнаяшкола.рф/conjugation-guide/logo.png">'],
+  ['rel="canonical"', '<link rel="canonical" href="https://xn--80aaagnrcpdkofpu2ae0iuf.xn--p1ai/conjugation-guide/">'],
+  ['name="robots" content="index, follow', '<meta name="robots" content="index, follow, max-image-preview:large">'],
+  ['name="keywords"', '<meta name="keywords" content="спряжение, спряжения глаголов, conjugation, verbs, английский, французский, испанский, немецкий, English, French, Spanish, German, глаголы, времена, B2">'],
+  ['name="author"', '<meta name="author" content="ИП Громова Анна Александровна">'],
+  ['name="theme-color"', '<meta name="theme-color" content="#2563eb">'],
+  ['rel="apple-touch-icon"', '<link rel="apple-touch-icon" href="favicon64.png">'],
+  ['application/ld+json', '<script type="application/ld+json">\n  {\n    "@context": "https://schema.org",\n    "@type": "WebApplication",\n    "name": "Conjugation Guide",\n    "alternateName": "Conjugation Guide — English · Français · Español · Deutsch",\n    "url": "https://xn--80aaagnrcpdkofpu2ae0iuf.xn--p1ai/conjugation-guide/",\n    "applicationCategory": "EducationalApplication",\n    "operatingSystem": "Any",\n    "inLanguage": ["en", "fr", "es", "de", "ru"],\n    "isAccessibleForFree": true,\n    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB" },\n    "publisher": { "@type": "Organization", "name": "Интерактивная школа «МУДРО»", "url": "https://интерактивнаяшкола.рф" }\n  }\n  </script>']
+]);
 /* Кириллический домен вместо punycode в ссылках */
 head = head.split('https://xn--80aaagnrcpdkofpu2ae0iuf.xn--p1ai').join('https://интерактивнаяшкола.рф');
 
@@ -859,6 +889,10 @@ head = head.replace(
   '<div class="quick" id="quickRow"><span class="quick-label">Try:</span></div>\n  </div>\n  <div class="langs" id="langCards"></div>'
 );
 head = head.replace(
+  '<div class="quick" id="quickRow"><span class="quick-label">Try:</span></div>\n  </div>\n  <div class="langs" id="langCards"></div>\n  <div class="langs" id="langCards"></div>',
+  '<div class="quick" id="quickRow"><span class="quick-label">Try:</span></div>\n  </div>\n  <div class="langs" id="langCards"></div>'
+);
+head = head.replace(
   '.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px}',
   '.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px}\n\t.langs{max-width:760px;margin:22px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}\n\t.lang-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}\n\t.lang-chip{width:max-content;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}\n\t.lang-name{font-weight:700;font-size:1rem}\n\t.lang-count{font-size:.83rem;color:var(--text-2)}\n\t@media (max-width:640px){.langs{grid-template-columns:1fr 1fr}}'
 );
@@ -866,29 +900,23 @@ part3 = part3.replace(
   "function showLanding() {\n  landingEl.hidden = false; verbPageEl.hidden = true;\n  topSearch.hidden = true; topSearch.classList.remove('show');\n  document.title = 'Conjugation — English · Français · Español';",
   "function showLanding() {\n  landingEl.hidden = false; verbPageEl.hidden = true;\n  topSearch.hidden = true; topSearch.classList.remove('show');\n  document.title = 'Conjugation — English · Français · Español · Deutsch';\n  renderLangCards();"
 );
+if (!part3.includes('function renderLangCards')) {
 part3 = part3.replace(
   "var navLinks = [];\nfunction showLanding() {",
   "function renderLangCards() {\n  var el = document.getElementById('langCards');\n  if (!el || !VD) return;\n  var html = '';\n  ['en', 'fr', 'es', 'de'].forEach(function (l) {\n    var lang = LANGS[l];\n    if (!lang) return;\n    var n = Object.keys(VD[l] || {}).length;\n    html += '<div class=\"lang-card\"><span class=\"lang-chip\">' + esc(lang.chip) + '</span><span class=\"lang-name\">' + esc(lang.name) + '</span><span class=\"lang-count\">' + n + ' глаголов · ' + esc(lang.rname) + '</span></div>';\n  });\n  el.innerHTML = html;\n}\nvar navLinks = [];\nfunction showLanding() {"
 );
+}
 /* Немецкий: файл данных */
-const GERMAN_SCRIPT = '<script src="data/extra_de.js"></script>\n';
+const GERMAN_SCRIPT_OLD = '';
 
 const out =
   head +
-  part1 + '\n</script>\n' +
-  '<script src="data/extra_en.js"></script>\n' +
-  '<script src="data/extra_fr.js"></script>\n' +
-  '<script src="data/extra_es.js"></script>\n' +
-  '<script src="data/ru_aspect.js"></script>\n' +
-  GERMAN_SCRIPT +
-  '<script src="data/english.js"></script>\n' +
-  '<script src="data/french.js"></script>\n' +
-  '<script src="data/spanish.js"></script>\n' +
   '<script>\n' +
-  bridge + '\n' +
-  part2 + '\n' +
-  ensureImp + '\n' +
-  part3;
+  part1 + '\n</script>\n' +
+  dataScripts.join('') +
+  '<script>\n' +
+  part3 + '\n</script>' +
+  tail;
 
 fs.writeFileSync(OUT, out, 'utf8');
 console.log('written', OUT, out.length, 'bytes');

@@ -42,12 +42,13 @@ input{font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1.06rem;letter-spacing:-.01em;color:var(--text);text-decoration:none;flex-shrink:0}
 .brand-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent) 0%,#7c3aed 100%);display:grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex-shrink:0}
 	.brand-logo{height:28px;width:auto;border-radius:6px;display:block;flex-shrink:0}
+	.brand-logo{height:28px;width:auto;border-radius:6px;display:block;flex-shrink:0}
 .lang-tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:3px;flex:1;min-width:240px;max-width:420px}
 .lang-tab{flex:1;padding:7px 8px;border-radius:8px;font-size:.85rem;font-weight:600;color:var(--text-2);transition:background .15s,color .15s;white-space:nowrap;text-align:center}
 .lang-tab:hover{color:var(--text)}
 .lang-tab[aria-selected="true"]{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.35)}
 .lang-tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
-.lang-tab[data-lang="en"] .dot{background:var(--chips)}.lang-tab[data-lang="fr"] .dot{background:var(--chipf)}.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}.lang-tab[data-lang="de"] .dot{background:#10b981}
+.lang-tab[data-lang="en"] .dot{background:var(--chips)}.lang-tab[data-lang="fr"] .dot{background:var(--chipf)}.lang-tab[data-lang="es"] .dot{background:var(--chipsc)}.lang-tab[data-lang="de"] .dot{background:#10b981}.lang-tab[data-lang="de"] .dot{background:#10b981}
 .lang-tab[aria-selected="true"] .dot{background:rgba(255,255,255,.85)}
 /* compact search shown in topbar on verb pages */
 .topsearch{flex:1;min-width:220px;max-width:460px;position:relative;display:none}
@@ -98,6 +99,7 @@ main{max-width:1040px;margin:0 auto;padding:8px 20px 64px;min-height:55vh}
 .listen-big.playing{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .verb-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
 	.verb-principal{margin-top:8px;font-size:.9rem;font-weight:600;color:var(--text);letter-spacing:.01em}
+	.verb-principal{margin-top:8px;font-size:.9rem;font-weight:600;color:var(--text);letter-spacing:.01em}
 .pill{font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:99px;background:var(--tag);color:var(--tag-text);border:1px solid var(--border)}
 .pill.accent{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-border)}
 .pill.link{cursor:pointer;transition:all .15s}
@@ -125,6 +127,7 @@ table.conj td.form{font-weight:500}
 table.conj td.form b{color:var(--accent);font-weight:700}
 table.conj td.form span.orth{color:var(--text-2)}
 	table.conj td.gloss{color:var(--text-3);font-size:.82rem;font-style:italic;white-space:nowrap;padding-left:6px}
+	table.conj td.gloss{color:var(--text-3);font-size:.82rem;font-style:italic;white-space:nowrap;padding-left:6px}
 table.conj td.audio-cell{width:1%;text-align:right;white-space:nowrap;padding-right:20px}
 .spk{width:30px;height:30px;border-radius:8px;display:inline-grid;place-items:center;color:var(--text-3);transition:all .12s;vertical-align:middle}
 .spk:hover{background:var(--accent-soft);color:var(--accent)}
@@ -150,6 +153,12 @@ table.conj td.audio-cell{width:1%;text-align:right;white-space:nowrap;padding-ri
 	.lang-name{font-weight:700;font-size:1rem}
 	.lang-count{font-size:.83rem;color:var(--text-2)}
 	@media (max-width:640px){.langs{grid-template-columns:1fr 1fr}}
+	.langs{max-width:760px;margin:22px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+	.lang-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}
+	.lang-chip{width:max-content;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+	.lang-name{font-weight:700;font-size:1rem}
+	.lang-count{font-size:.83rem;color:var(--text-2)}
+	@media (max-width:640px){.langs{grid-template-columns:1fr 1fr}}
 .feat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
 .feat-card .ico{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin-bottom:12px}
 .feat-card h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
@@ -163,6 +172,9 @@ table.conj td.audio-cell{width:1%;text-align:right;white-space:nowrap;padding-ri
 footer{border-top:1px solid var(--border);background:var(--surface)}
 .foot-in{max-width:1040px;margin:0 auto;padding:28px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:.82rem;color:var(--text-3)}
 .foot-in b{color:var(--text-2);font-weight:600}
+	.foot-legal{max-width:1040px;margin:0 auto;padding:0 20px 24px;font-size:.8rem;color:var(--text-3);line-height:1.6;text-align:center}
+	.foot-legal a{color:var(--text-2);text-decoration:none}
+	.foot-legal a:hover{text-decoration:underline}
 	.foot-legal{max-width:1040px;margin:0 auto;padding:0 20px 24px;font-size:.8rem;color:var(--text-3);line-height:1.6;text-align:center}
 	.foot-legal a{color:var(--text-2);text-decoration:none}
 	.foot-legal a:hover{text-decoration:underline}
@@ -190,6 +202,32 @@ footer{border-top:1px solid var(--border);background:var(--surface)}
   .lang-tab .dot{margin-right:3px}
 }
 </style>
+
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:title" content="Conjugation Guide — English · Français · Español · Deutsch">
+  <meta name="twitter:description" content="Поиск глаголов и таблицы спряжений: английский, французский, испанский, немецкий. Примеры, переводы и озвучка.">
+  <meta name="twitter:image" content="https://интерактивнаяшкола.рф/conjugation-guide/logo.png">
+  <link rel="canonical" href="https://интерактивнаяшкола.рф/conjugation-guide/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="keywords" content="спряжение, спряжения глаголов, conjugation, verbs, английский, французский, испанский, немецкий, English, French, Spanish, German, глаголы, времена, B2">
+  <meta name="author" content="ИП Громова Анна Александровна">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="favicon64.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Conjugation Guide",
+    "alternateName": "Conjugation Guide — English · Français · Español · Deutsch",
+    "url": "https://интерактивнаяшкола.рф/conjugation-guide/",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Any",
+    "inLanguage": ["en", "fr", "es", "de", "ru"],
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB" },
+    "publisher": { "@type": "Organization", "name": "Интерактивная школа «МУДРО»", "url": "https://интерактивнаяшкола.рф" }
+  }
+  </script>
 </head>
 <body>
 
@@ -204,6 +242,7 @@ footer{border-top:1px solid var(--border);background:var(--surface)}
       <button class="lang-tab" role="tab" data-lang="en" aria-selected="true"><span class="dot"></span>English</button>
       <button class="lang-tab" role="tab" data-lang="fr" aria-selected="false"><span class="dot"></span>Français</button>
       <button class="lang-tab" role="tab" data-lang="es" aria-selected="false"><span class="dot"></span>Español</button>
+      <button class="lang-tab" role="tab" data-lang="de" aria-selected="false"><span class="dot"></span>Deutsch</button>
       <button class="lang-tab" role="tab" data-lang="de" aria-selected="false"><span class="dot"></span>Deutsch</button>
     </nav>
     <div class="topsearch searchbar" id="topSearch" hidden>
@@ -1393,6 +1432,7 @@ RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
   };
 })();
 
+
 </script>
 <script src="data/extra_en.js"></script>
 <script src="data/extra_fr.js"></script>
@@ -1426,7 +1466,7 @@ RU_PRON.de = ['я', 'ты', 'он/она', 'мы', 'вы', 'они'];
     es: ['yo', 'tú', 'él / ella / usted', 'nosotros', 'vosotros', 'ellos / ellas / ustedes']
   };
   var SRC = { en: window.CONJ_DATA_EN, fr: window.CONJ_DATA_FR, es: window.CONJ_DATA_ES };
-  ['en', 'fr', 'es'].forEach(function (lang) {
+  ['en', 'fr', 'es', 'de'].forEach(function (lang) {
     var d = SRC[lang]; if (!d || !d.verbs) return;
     VD[lang] = VD[lang] || {};
     var PR = AI_PRON[lang], map = AI_MAP[lang] || {};
@@ -3463,6 +3503,8 @@ var EX_PATTERN = {
          cond: 'Yo {f} si pudiera.', cc: 'Yo {f}.', subj: 'Espero que yo {f}.',
          simp: 'Si yo {f}, sería mejor.', sp: 'No creo que yo {f}.', imp: '{f}!' },
   de: { pres: 'Ich {f}.', pr: 'Ich {f}.', perf: 'Ich {f}.', plus: 'Ich {f}.',
+         fut: 'Ich {f}.', fut2: 'Ich {f}.', konj: 'Ich {f}.', imp: '{f}!' },
+  de: { pres: 'Ich {f}.', pr: 'Ich {f}.', perf: 'Ich {f}.', plus: 'Ich {f}.',
          fut: 'Ich {f}.', fut2: 'Ich {f}.', konj: 'Ich {f}.', imp: '{f}!' }
 };
 function exampleHtml(ex, lang) {
@@ -3598,6 +3640,7 @@ $('backHome').addEventListener('click', function () { location.hash = ''; });
   updateTabs(); renderQuick(); applyLangUi();
   if (state.verb) showVerb(state.lang, state.verb); else showLanding();
 })();
+
 
 </script>
 </body>
