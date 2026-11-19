@@ -23,7 +23,7 @@ const ctx = { window: {} };
 vm.createContext(ctx);
 
 vm.runInContext(part1, ctx);
-for (const f of ['extra_en.js', 'extra_fr.js', 'extra_es.js', 'extra_de.js', 'english.js', 'french.js', 'spanish.js']) {
+for (const f of ['ru_aspect.js', 'extra_en.js', 'extra_fr.js', 'extra_es.js', 'extra_de.js', 'english.js', 'french.js', 'spanish.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, 'data', f), 'utf8'), ctx);
 }
 vm.runInContext(part2, ctx);
@@ -176,6 +176,32 @@ check(tagless(VD.de.anziehen.tenses.perf.rows[0][1]) === 'habe angezogen', 'DE a
 check(ctx.ruGloss('de', 'pres', 0, deSein) === 'я есть', 'DE gloss sein pres = я есть');
 check(ctx.ruGloss('de', 'fut', 0, deSein) === 'я буду', 'DE gloss sein fut = я буду');
 check(ctx.ruGloss('de', 'perf', 0, deSein) === 'я был', 'DE gloss sein perf = я был');
+
+// --- 12. Совершенные времена дают совершенный перевод
+check(ctx.ruGloss('fr', 'pc', 0, VD.fr.trouver) === 'я нашёл', 'FR trouver passé composé → я нашёл');
+check(ctx.ruGloss('fr', 'pc', 2, VD.fr.trouver) === 'он/она нашёл / нашла', 'FR trouver passé composé 3sg → нашёл / нашла');
+check(ctx.ruGloss('fr', 'pq', 0, VD.fr.trouver) === 'я нашёл', 'FR trouver plus-que-parfait → я нашёл');
+check(ctx.ruGloss('fr', 'fa', 0, VD.fr.trouver) === 'я найду', 'FR trouver futur antérieur → я найду');
+check(ctx.ruGloss('fr', 'cp', 0, VD.fr.trouver) === 'я бы нашёл', 'FR trouver conditionnel passé → я бы нашёл');
+check(ctx.ruGloss('fr', 'impf', 0, VD.fr.trouver) === 'я находил', 'FR trouver imparfait → я находил');
+check(ctx.ruGloss('fr', 'pres', 0, VD.fr.trouver) === 'я нахожу', 'FR trouver présent → я нахожу');
+check(ctx.ruGloss('en', 'presperf', 0, VD.en.find) === 'я нашёл', 'EN find present perfect → я нашёл');
+check(ctx.ruGloss('en', 'pastperf', 0, VD.en.find) === 'я нашёл', 'EN find past perfect → я нашёл');
+check(ctx.ruGloss('en', 'futperf', 0, VD.en.find) === 'я найду', 'EN find future perfect → я найду');
+check(ctx.ruGloss('en', 'past', 0, VD.en.find) === 'я находил', 'EN find past simple → я находил');
+check(ctx.ruGloss('es', 'pret', 0, VD.es.encontrar) === 'я нашёл', 'ES encontrar indefinido → я нашёл');
+check(ctx.ruGloss('es', 'cc', 0, VD.es.encontrar) === 'я бы нашёл', 'ES encontrar condicional compuesto → я бы нашёл');
+check(ctx.ruGloss('de', 'perf', 0, VD.de.finden) === 'я нашёл', 'DE finden Perfekt → я нашёл');
+check(ctx.ruGloss('de', 'fut2', 0, VD.de.finden) === 'я найду', 'DE finden Futur II → я найду');
+
+// Совершенные формы неправильных глаголов
+check(ctx.ruGloss('fr', 'pc', 0, VD.fr.aller) === 'я пошёл', 'FR aller passé composé → я пошёл');
+check(ctx.ruGloss('fr', 'pc', 2, VD.fr.aller) === 'он/она пошёл / пошла', 'FR aller passé composé 3sg → пошёл / пошла');
+check(ctx.ruGloss('en', 'presperf', 5, VD.en.find) === 'они нашли', 'EN find present perfect 3pl → они нашли');
+check(ctx.ruGloss('fr', 'pc', 4, VD.fr.faire) === 'вы сделали', 'FR faire passé composé 2pl → вы сделали');
+
+// Двувидовые глаголы спрягаются как несовершенные
+check(ctx.ruGloss('fr', 'pres', 0, VD.fr.attaquer) === 'я атакую', 'FR attaquer présent → я атакую');
 
 console.log('\nИТОГ: ' + (errors === 0 ? 'ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ ✓' : 'ОШИБОК: ' + errors));
 process.exit(errors === 0 ? 0 : 1);
