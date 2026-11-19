@@ -845,10 +845,30 @@ part3 = part3.replace(
   "  es: { pres: 'Yo {f}.', pc: 'Yo {f}.', pret: 'Ayer yo {f}.', impf: 'Antes yo {f}.',\n         plus: 'Yo {f}.', fut: 'Mañana yo {f}.', fc: 'Yo {f}.',\n         cond: 'Yo {f} si pudiera.', cc: 'Yo {f}.', subj: 'Espero que yo {f}.',\n         simp: 'Si yo {f}, sería mejor.', sp: 'No creo que yo {f}.', imp: '{f}!' }",
   "  es: { pres: 'Yo {f}.', pc: 'Yo {f}.', pret: 'Ayer yo {f}.', impf: 'Antes yo {f}.',\n         plus: 'Yo {f}.', fut: 'Mañana yo {f}.', fc: 'Yo {f}.',\n         cond: 'Yo {f} si pudiera.', cc: 'Yo {f}.', subj: 'Espero que yo {f}.',\n         simp: 'Si yo {f}, sería mejor.', sp: 'No creo que yo {f}.', imp: '{f}!' },\n  de: { pres: 'Ich {f}.', pr: 'Ich {f}.', perf: 'Ich {f}.', plus: 'Ich {f}.',\n         fut: 'Ich {f}.', fut2: 'Ich {f}.', konj: 'Ich {f}.', imp: '{f}!' }"
 );
-/* Немецкий: лендинг */
+/* Немецкий: лендинг — текст + блок языков */
 part3 = part3.replace(
-  'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — hundreds of B2 verbs, with example sentences, translations and audio for every form.',
+  'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — with example sentences and audio for every form.',
   'Look up a verb in <b>English</b>, <b>French</b>, <b>Spanish</b> or <b>German</b> and see its complete conjugation — hundreds of B2 verbs, with example sentences, translations and audio for every form.'
+);
+head = head.replace(
+  'Look up a verb in <b>English</b>, <b>French</b> or <b>Spanish</b> and see its complete conjugation — with example sentences and audio for every form.',
+  'Look up a verb in <b>English</b>, <b>French</b>, <b>Spanish</b> or <b>German</b> and see its complete conjugation — hundreds of B2 verbs, with example sentences, translations and audio for every form.'
+);
+head = head.replace(
+  '<div class="quick" id="quickRow"><span class="quick-label">Try:</span></div>\n  </div>',
+  '<div class="quick" id="quickRow"><span class="quick-label">Try:</span></div>\n  </div>\n  <div class="langs" id="langCards"></div>'
+);
+head = head.replace(
+  '.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px}',
+  '.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px}\n\t.langs{max-width:760px;margin:22px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}\n\t.lang-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}\n\t.lang-chip{width:max-content;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}\n\t.lang-name{font-weight:700;font-size:1rem}\n\t.lang-count{font-size:.83rem;color:var(--text-2)}\n\t@media (max-width:640px){.langs{grid-template-columns:1fr 1fr}}'
+);
+part3 = part3.replace(
+  "function showLanding() {\n  landingEl.hidden = false; verbPageEl.hidden = true;\n  topSearch.hidden = true; topSearch.classList.remove('show');\n  document.title = 'Conjugation — English · Français · Español';",
+  "function showLanding() {\n  landingEl.hidden = false; verbPageEl.hidden = true;\n  topSearch.hidden = true; topSearch.classList.remove('show');\n  document.title = 'Conjugation — English · Français · Español · Deutsch';\n  renderLangCards();"
+);
+part3 = part3.replace(
+  "var navLinks = [];\nfunction showLanding() {",
+  "function renderLangCards() {\n  var el = document.getElementById('langCards');\n  if (!el || !VD) return;\n  var html = '';\n  ['en', 'fr', 'es', 'de'].forEach(function (l) {\n    var lang = LANGS[l];\n    if (!lang) return;\n    var n = Object.keys(VD[l] || {}).length;\n    html += '<div class=\"lang-card\"><span class=\"lang-chip\">' + esc(lang.chip) + '</span><span class=\"lang-name\">' + esc(lang.name) + '</span><span class=\"lang-count\">' + n + ' глаголов · ' + esc(lang.rname) + '</span></div>';\n  });\n  el.innerHTML = html;\n}\nvar navLinks = [];\nfunction showLanding() {"
 );
 /* Немецкий: файл данных */
 const GERMAN_SCRIPT = '<script src="data/extra_de.js"></script>\n';
